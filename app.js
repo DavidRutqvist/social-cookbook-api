@@ -1,11 +1,13 @@
 var express = require('express');
 var logger = require('morgan');
 var bodyParser = require('body-parser');
-
 var app = express();
 
+var jwt = require("jsonwebtoken");
+var config = require("./config");
 
-// uncomment after placing your favicon in /public
+app.set("jwtSecret", config.secret);
+
 app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -13,7 +15,9 @@ app.use(bodyParser.urlencoded({ extended: true }));
 var router = express.Router();
 app.use("/api", router);//Prepend all calls with /api
 
-require("./routes/index")(router);
+//Add main routes here, splitted into several files
+require("./routes/index")(app, router, jwt);//Important that this one is first since it provides authentication
+
 /*
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
