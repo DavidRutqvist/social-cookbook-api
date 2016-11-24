@@ -5,6 +5,7 @@ var app = express();
 
 var jwt = require("jsonwebtoken");
 var config = require("./config");
+var util = require("./util");
 
 app.set("jwtSecret", config.secret);
 
@@ -16,7 +17,7 @@ var router = express.Router();
 app.use("/api", router);//Prepend all calls with /api
 
 //Add main routes here, splitted into several files
-require("./routes/index")(app, router, jwt);//Important that this one is first since it provides authentication
+require("./routes/index")(app, router, jwt, util);//Important that this one is first since it provides authentication
 
 /*
 // catch 404 and forward to error handler
