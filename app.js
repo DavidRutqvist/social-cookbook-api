@@ -6,6 +6,19 @@ var app = express();
 var jwt = require("jsonwebtoken");
 var config = require("./config");
 var util = require("./util");
+var database = require("./data/database");
+
+const commandLineArgs = require('command-line-args')
+const options = commandLineArgs([
+  {
+    name: 'databaseConnectionString',
+    alias: 'd',
+    type: String,
+    defaultValue: 'mysql://apiUser:5TYnyNsH8g@127.0.0.1/cookbook'
+  }
+]);
+config.databaseConnectionString = options.databaseConnectionString;
+database.init(config);
 
 app.set("jwtSecret", config.secret);
 

@@ -12,4 +12,5 @@ RUN npm install
 COPY . /usr/src/app
 
 EXPOSE 3000
-CMD [ "npm", "start" ]
+ENTRYPOINT [ "npm", "start", "--", "-d" ]
+CMD [ "mysql://apiUser:5TYnyNsH8g@127.0.0.1/cookbook" ]
