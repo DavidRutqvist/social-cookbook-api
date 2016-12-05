@@ -20,5 +20,48 @@ module.exports = {
 
     //Set up database Schema
     install.install(connectionPool);
+  },
+  register: function(userId, firstName, lastName, email, callback) {
+    connectionPool.getConnection(function(err, connection) {
+      connection.query("INSERT INTO Users (Id, FirstName, LastName, Email) VALUES (?, ?, ?, ?)", [userId, firstName, lastName, email], function(err, result) {
+        if(err) {
+          throw err;
+        }
+
+        if(result.affectedRows > 0) {
+          connection.release();
+          callback(true);
+        }
+        else {
+          connection.release();
+          callback(false);
+        }
+      });
+    });
+  },
+  getUser: function(userId, callback) {
+    connectionPool.getConnection(function(err, connection) {
+      connection.query("SELECT * FROM Users WHERE Id = ? LIMIT 1", [userId], function(err, rows, fields) {
+        if(err) {
+          throw err;
+        }
+
+        if(rows.length > 0) {
+          var user = {
+            userId: userId,
+            firstName: rows[0].FirstName,
+            lastName: rows[0].LastName,
+            email: rows[0].Email
+          };
+
+          connection.release();
+          callback(true, user);
+        }
+        else {
+          connection.release();
+          callback(false, null);
+        }
+      });
+    });
   }
 }
