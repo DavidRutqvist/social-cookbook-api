@@ -38,6 +38,17 @@ CREATE TABLE Recipes (
   FOREIGN KEY (ImageId) REFERENCES Images(Id)
 );
 
+CREATE TABLE IngredientsInRecipes (
+  IngredientId INT NOT NULL,
+  RecipeId INT NOT NULL,
+  Amount DOUBLE NOT NULL,
+  Unit VARCHAR(15) NOT NULL,
+
+  PRIMARY KEY (IngredientId, RecipeId),
+  FOREIGN KEY (IngredientId) REFERENCES Ingredients(Id),
+  FOREIGN KEY (RecipeId) REFERENCES Recipes(Id)
+);
+
 CREATE TABLE Likes (
   UserId BIGINT NOT NULL,
   RecipeId INT NOT NULL,
