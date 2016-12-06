@@ -26,7 +26,7 @@ module.exports = function(app, router, jwt, util, database) {
           if(success) {
             //All good, create token
             var token = jwt.sign(user, app.get("jwtSecret"), {
-              expiresIn: 1440 //24 hours
+              expiresIn: 3600 //60 minutes
             });
 
             res.json({
@@ -109,9 +109,17 @@ module.exports = function(app, router, jwt, util, database) {
     if (token) {
       jwt.verify(token, app.get("jwtSecret"), function(err, decoded) {
         if(err !== false) {
-          //Auth OK
-          req.decoded = decoded;
-          next();
+          if((decoded === undefined) || (decoded.exp < Math.floor(Date.now() / 1000))) {
+            return res.status(401).json({
+              success: false,
+              message: "Token expired"
+            });
+          }
+          else {
+            //Auth OK
+            req.decoded = decoded;
+            next();
+          }
         }
         else {
           return res.status(401).json({
