@@ -64,8 +64,16 @@ module.exports = function(app, router, database) {
 
   router.get("/recipes/:id", function(req, res) {
     //Get a specific recipe with id req.params.id
-    res.json({
-      message: "Not yet implemented"
+    database.recipes.get(req.params.id, function(success, recipe) {
+      if(success) {
+        res.json(recipe);
+      }
+      else {
+        res.status(404).json({
+          success: false,
+          message: "Recipe not found"
+        });
+      }
     });
   });
 

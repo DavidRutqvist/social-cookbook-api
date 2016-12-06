@@ -48,6 +48,41 @@ module.exports = {
         connection.release();
       });
     });
+  },
+  get: function(recipeId, callback) {
+    connectionPool.getConnection(function(err, connection) {//TODO: Add left join with images
+      connection.query("SELECT Recipes.Id AS recipeId, Recipes.Title AS title, Recipes.Content AS content, Recipes.CreationTime AS creationTime, Recipes.NumberOfPortions AS numberOfPortions, \
+                          Users.FirstName AS firstName, Users.LastName AS lastName, Users.Id AS userId \
+                        FROM Recipes \
+                        JOIN Users ON Recipes.UserId = Users.Id \
+                        WHERE Recipes.Id = ? LIMIT 1", [recipeId], function(err, rows, fields) {
+                          if(err) {
+                            throw err;
+                          }
+
+                          if(rows.length > 0) {
+                            var recipe = {
+                              id: rows[0].recipeId,
+                              title: rows[0].title,
+                              creationTime: rows[0].creationTime,
+                              numberOfPortions: rows[0].numberOfPortions,
+                              content: rows[0].content,
+                              byUser: {
+                                id: rows[0].userId,
+                                firstName: rows[0].firstName,
+                                lastName: rows[0].lastName
+                              }
+                            };
+
+                            //TODO: Get ingredients and Likes
+
+                            callback(true, recipe);
+                          }
+                          else {
+                            callback(false, null);
+                          }
+                        });
+    });
   }
 }
 
