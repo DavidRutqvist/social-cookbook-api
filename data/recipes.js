@@ -1,9 +1,11 @@
 var connectionPool;
-var ingredientsHelper;
+var ingredientsHelper = require("./ingredients");
+var likesHelper = require("./likes");
 module.exports = {
-  init: function(dbPool, ingredientsHelperObject) {
+  init: function(dbPool) {
     connectionPool = dbPool;
-    ingredientsHelper = ingredientsHelperObject;
+    ingredientsHelper.init(connectionPool);
+    likesHelper.init(connectionPool);
   },
   insert: function(userId, title, content, numberOfPortions, ingredients, image, callback) {
     connectionPool.getConnection(function(err, connection) {
@@ -73,12 +75,23 @@ module.exports = {
                                 lastName: rows[0].lastName
                               }
                             };
-
                             //TODO: Get ingredients and Likes
+                            likesHelper.getLikes(connection, recipe.id, function(success, likes){
+                              if(success)
+                              {
+                                recipe.likes = likes;
+                                connection.release();
+                                callback(true, recipe);
+                              }
+                              else {
+                                connection.release();
+                                callback(false, recipe);
+                              }
+                            });
 
-                            callback(true, recipe);
                           }
                           else {
+                            connection.release();
                             callback(false, null);
                           }
                         });

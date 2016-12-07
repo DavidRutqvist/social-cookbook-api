@@ -2,6 +2,7 @@ var mysql = require("mysql");
 var install = require("./install/install");
 var recipes = require("./recipes");
 var ingredients = require("./ingredients");
+var likes = require("./likes");
 var connectionPool = {};
 module.exports = {
   init: function(config) {
@@ -24,6 +25,7 @@ module.exports = {
     install.install(connectionPool);
     recipes.init(connectionPool, ingredients);
     ingredients.init(connectionPool);
+    likes.init(connectionPool);
   },
   register: function(userId, firstName, lastName, email, callback) {
     connectionPool.getConnection(function(err, connection) {
@@ -43,7 +45,6 @@ module.exports = {
       });
     });
   },
-  recipes: recipes,
   getUser: function(userId, callback) {
     connectionPool.getConnection(function(err, connection) {
       connection.query("SELECT * FROM Users WHERE Id = ? LIMIT 1", [userId], function(err, rows, fields) {
@@ -68,5 +69,8 @@ module.exports = {
         }
       });
     });
-  }
+  },
+  recipes: recipes,
+  ingredients: ingredients,
+  likes: likes
 }
