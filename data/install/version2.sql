@@ -1,0 +1,15 @@
+CREATE TABLE Roles (
+  Id INT NOT NULL AUTO_INCREMENT,
+  Name VARCHAR(255) NOT NULL,
+  InheritRoleId INT NULL,
+
+  PRIMARY KEY (Id),
+  FOREIGN KEY (InheritRoleId) REFERENCES Roles(Id)
+);
+
+INSERT INTO Roles (Name) VALUES ("User");
+INSERT INTO Roles (Name, InheritRoleId) VALUES ("Administrator", 1);
+
+ALTER TABLE Users
+  ADD RoleId INT NOT NULL DEFAULT 1,
+  ADD CONSTRAINT FOREIGN KEY (RoleId) REFERENCES Roles(Id);
