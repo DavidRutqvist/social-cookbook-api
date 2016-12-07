@@ -17,7 +17,7 @@ module.exports = function(app, router, database) {
       missingFields += "content, ";
     }
 
-    if(req.body.ingredients === undefined) {
+    if((req.body.ingredients === undefined) || (req.body.ingredients.length == 0)) {
       missingFields += "ingredients, ";
     }
 
@@ -27,11 +27,20 @@ module.exports = function(app, router, database) {
 
     if(missingFields !== "") {
       missingFields = missingFields.substring(0, missingFields.length - 2);
-      res.status(400).json({
+      return res.status(400).json({
         success: false,
         message: "Missing mandatory fields " + missingFields
       });
-      return;//to reduce nestling
+    }
+
+    for(var i = 0; i < req.body.ingredients.length; i++) {
+      var ingredient = req.body.ingredients[i];
+      if((ingredient.name === undefined) || (ingredient.amount === undefined) || (ingredient.unit === undefined)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid ingredient(s) supplied"
+        });
+      }
     }
 
     database.recipes.insert(req.decoded.userId, req.body.title, req.body.content, req.body.numberOfPortions, req.body.ingredients , req.body.image, function(success, recipeId) {
@@ -77,8 +86,8 @@ module.exports = function(app, router, database) {
     });
   });
 
-  router.put("/recipes/:id", function(req, res) {
-    //Update recipe with id req.params.id
+  router.put("/recipes/:id/:param", function(req, res) {
+    //Update the parameter :param in recipe with id req.params.id
     res.json({
       message: "Not yet implemented"
     });
