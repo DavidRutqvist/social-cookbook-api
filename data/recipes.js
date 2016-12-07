@@ -75,20 +75,17 @@ module.exports = {
                                 lastName: rows[0].lastName
                               }
                             };
-                            //TODO: Get ingredients and Likes
-                            likesHelper.getLikes(connection, recipe.id, function(success, likes){
-                              if(success)
-                              {
-                                recipe.likes = likes;
-                                connection.release();
-                                callback(true, recipe);
-                              }
-                              else {
-                                connection.release();
-                                callback(false, recipe);
-                              }
-                            });
 
+                            getIngredients(connection, recipe, function(recipe) {
+                              getLikes(connection, recipe, function(success, recipe) {
+                                if(success) {
+                                  callback(true, recipe);
+                                }
+                                else {
+                                  callback(false, recipe);
+                                }
+                              });
+                            });
                           }
                           else {
                             connection.release();
@@ -97,6 +94,26 @@ module.exports = {
                         });
     });
   }
+}
+
+function getLikes(connection, recipe, callback) {
+  likesHelper.getLikes(connection, recipe.id, function(success, likes){
+    if(success)
+    {
+      recipe.likes = likes;
+      callback(true, recipe);
+    }
+    else {
+      callback(false, recipe);
+    }
+  });
+}
+
+function getIngredients(connection, recipe, callback) {
+  ingredientsHelper.getIngredients(connection, recipe.id, function(ingredients) {
+    recipe.ingredients = ingredients;
+    callback(recipe);
+  });
 }
 
 function addNextIngredient(connection, recipeId, index, ingredients, callback) {

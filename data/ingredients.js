@@ -40,5 +40,18 @@ module.exports = {
         });
       }
     });
+  },
+  getIngredients: function(connection, recipeId, callback) {
+    connection.query("SELECT Ingredients.Id AS id, Ingredients.Name AS name, IngredientsInRecipes.Amount AS amount, IngredientsInRecipes.Unit AS unit \
+                      FROM IngredientsInRecipes JOIN Ingredients ON IngredientsInRecipes.IngredientId = Ingredients.Id \
+                      WHERE IngredientsInRecipes.RecipeId = ?",
+                      [recipeId],
+                      function(err, rows, fields) {
+                        if(err) {
+                          throw err;
+                        }
+
+                        callback(rows);
+                      });
   }
 }
