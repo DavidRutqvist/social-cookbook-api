@@ -27,6 +27,40 @@ module.exports = {
     ingredients.init(connectionPool);
     likes.init(connectionPool);
   },
+  isAdmin: function(userId, callback) {
+    connectionPool.getConnection(function(err, connection) {
+      if(err) {
+        throw err;
+      }
+
+      connection.query("SELECT Roles.Name AS roleName, Roles.InheritRoleId AS inheritedRole FROM Users JOIN Roles ON Users.RoleId = Roles.Id WHERE Users.Id = ?", [userId], function(err, rows, fields) {
+        if(err) {
+          throw err;
+        }
+        
+        if(rows.length > 0) {
+          if(rows[0].roleName.toLowerCase() === "administrator") {
+            connection.release();
+            callback(true);
+          }
+          else if((rows[0].inheritedRole !== undefined) && (rows[0].inheritedRole !== null)) {
+            checkInheritedRole(connection, rows[0].inheritedRole, function(isAdmin) {
+              connection.release();
+              callback(isAdmin);
+            });
+          }
+          else {
+            connection.release();
+            callback(false);
+          }
+        }
+        else {
+          connection.release();
+          callback(false);
+        }
+      });
+    });
+  },
   register: function(userId, firstName, lastName, email, callback) {
     connectionPool.getConnection(function(err, connection) {
       connection.query("INSERT INTO Users (Id, FirstName, LastName, Email) VALUES (?, ?, ?, ?)", [userId, firstName, lastName, email], function(err, result) {
@@ -73,4 +107,27 @@ module.exports = {
   recipes: recipes,
   ingredients: ingredients,
   likes: likes
+}
+
+function checkInheritedRole(connection, roleId, callback) {
+  connection.query("SELECT Roles.Name AS roleName, Roles.InheritRoleId AS inheritedRole FROM Roles WHERE Roles.Id = ?", [roleId], function(err, rows, fields) {
+    if(err) {
+      throw err;
+    }
+
+    if(rows.length > 0) {
+      if(rows[0].roleName.toLowerCase() === "administrator") {
+        callback(true);
+      }
+      else if((rows[0].inheritedRole !== undefined) && (rows[0].inheritedRole !== null)) {
+        checkInheritedRole(connection, rows[0].inheritedRole, callback);
+      }
+      else {
+        callback(false);
+      }
+    }
+    else {
+      callback(false);
+    }
+  });
 }

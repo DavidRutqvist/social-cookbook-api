@@ -137,9 +137,26 @@ module.exports = function(app, router, jwt, util, database) {
     }
   });
 
-  router.get('/', function(req, res, next) {
-    res.json({
-      message: "testing"
-    })
+  router.get('/me', function(req, res, next) {
+    database.getUser(req.decoded.userId, function(success, user) {
+      if(success) {
+        database.isAdmin(user.userId, function(isAdmin) {
+          user.isAdmin = isAdmin;
+          res.json({
+            id: user.userId,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            email: user.email,
+            isAdmin: user.isAdmin
+          });
+        });
+      }
+      else {
+        res.status(404).json({
+          success: false,
+          message: "The user associated with this token could not be found"
+        });
+      }
+    });
   });
 }
