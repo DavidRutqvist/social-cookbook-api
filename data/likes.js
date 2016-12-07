@@ -104,6 +104,15 @@ module.exports = {
         });
       });
     },
+    removeLikesFromRecipe: function(connection, recipeId, callback) {
+      connection.query("DELETE FROM Likes WHERE RecipeId = ?", [recipeId], function(err, result) {
+        if(err) {
+          throw err;
+        }
+
+        callback(result.affectedRows);
+      });
+    },
     removeLikes: function(userId, recipeId, callback){
       connectionPool.getConnection(function(err, connection){
         if(err) {

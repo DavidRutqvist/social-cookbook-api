@@ -41,6 +41,15 @@ module.exports = {
       }
     });
   },
+  deleteIngredientsFromRecipe: function(connection, recipeId, callback) {
+    connection.query("DELETE FROM IngredientsInRecipes WHERE RecipeId = ?", [recipeId], function(err, result) {
+      if(err) {
+        throw err;
+      }
+
+      callback(result.affectedRows);
+    });
+  },
   getIngredients: function(connection, recipeId, callback) {
     connection.query("SELECT Ingredients.Id AS id, Ingredients.Name AS name, IngredientsInRecipes.Amount AS amount, IngredientsInRecipes.Unit AS unit \
                       FROM IngredientsInRecipes JOIN Ingredients ON IngredientsInRecipes.IngredientId = Ingredients.Id \

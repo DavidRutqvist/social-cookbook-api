@@ -195,8 +195,47 @@ module.exports = function(app, router, database) {
 
   router.delete("/recipes/:id", function(req, res) {
     //Delete recipe with id req.params.id
-    res.json({
-      message: "Not yet implemented"
+    database.recipes.getCreator(req.params.id, function(success, creatorId) {
+      if(success) {
+        if(creatorId === req.decoded.userId) {
+          deleteRecipe(res, database.recipes, req.params.id);
+        }
+        else {
+          database.isAdmin(req.decoded.userId, function(isAdmin) {
+            if(isAdmin) {
+              deleteRecipe(res, database.recipes, req.params.id);
+            }
+            else {
+              res.status(403).json({
+                success: false,
+                message: "You are not either administrator or the creator of the recipe, hence you are not allowed to delete it"
+              });
+            }
+          });
+        }
+      }
+      else {
+        res.status(404).json({
+          success: false,
+          message: "Recipe not found"
+        });
+      }
     });
+  });
+}
+
+function deleteRecipe(res, recipes, recipeId) {
+  recipes.delete(recipeId, function(success) {
+    if(success) {
+      res.json({
+        success: true
+      });
+    }
+    else {
+      res.status(500).json({
+        success: false,
+        message: "Could not delete recipe"
+      });
+    }
   });
 }

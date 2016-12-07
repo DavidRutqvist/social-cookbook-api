@@ -33,11 +33,11 @@ module.exports = {
         throw err;
       }
 
-      connection.query("SELECT Roles.Name AS roleName, Roles.InheritRoleId AS inheritedRole FROM Users JOIN Roles ON Users.RoleId = Roles.Id WHERE Users.Id = ?", [userId], function(err, rows, fields) {
+      connection.query("SELECT Roles.Name AS roleName, Roles.InheritRoleId AS inheritedRole FROM Users JOIN Roles ON Users.RoleId = Roles.Id WHERE Users.Id = ? LIMIT 1", [userId], function(err, rows, fields) {
         if(err) {
           throw err;
         }
-        
+
         if(rows.length > 0) {
           if(rows[0].roleName.toLowerCase() === "administrator") {
             connection.release();
@@ -110,7 +110,7 @@ module.exports = {
 }
 
 function checkInheritedRole(connection, roleId, callback) {
-  connection.query("SELECT Roles.Name AS roleName, Roles.InheritRoleId AS inheritedRole FROM Roles WHERE Roles.Id = ?", [roleId], function(err, rows, fields) {
+  connection.query("SELECT Roles.Name AS roleName, Roles.InheritRoleId AS inheritedRole FROM Roles WHERE Roles.Id = ? LIMIT 1", [roleId], function(err, rows, fields) {
     if(err) {
       throw err;
     }

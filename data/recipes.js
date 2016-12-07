@@ -109,6 +109,26 @@ module.exports = {
                         });
     });
   },
+  getCreator: function(recipeId, callback) {
+    connectionPool.getConnection(function(err, connection) {
+      if(err) {
+        throw err;
+      }
+
+      connection.query("SELECT UserId AS userId FROM Recipes WHERE Recipes.Id = ? LIMIT 1", [recipeId], function(err, rows, fields) {
+        if(err) {
+          throw err;
+        }
+
+        if(rows.length > 0) {
+          callback(true, rows[0].userId);
+        }
+        else {
+          callback(false, null);
+        }
+      });
+    });
+  },
   get: function(recipeId, callback) {
     connectionPool.getConnection(function(err, connection) {//TODO: Add left join with images
       connection.query("SELECT Recipes.Id AS recipeId, Recipes.Title AS title, Recipes.Content AS content, Recipes.CreationTime AS creationTime, Recipes.NumberOfPortions AS numberOfPortions, \
@@ -165,6 +185,35 @@ module.exports = {
                             callback(false, null);
                           }
                         });
+    });
+  },
+  delete: function(recipeId, callback) {
+    connectionPool.getConnection(function(err, connection) {
+      likesHelper.removeLikesFromRecipe(connection, recipeId, function(affectedRows) {
+        //We don't care about affectedRows since there may be zero likes
+        ingredientsHelper.deleteIngredientsFromRecipe(connection, recipeId, function(affectedRows) {
+          if(affectedRows > 0) {
+            connection.query("DELETE FROM Recipes WHERE Recipes.Id = ?", [recipeId], function(err, result) {
+              if(err) {
+                throw err;
+              }
+
+              if(result.affectedRows > 0) {
+                connection.release();
+                callback(true);
+              }
+              else {
+                connection.release();
+                callback(false);
+              }
+            });
+          }
+          else {
+            connection.release();
+            callback(false);
+          }
+        });
+      });
     });
   }
 }
