@@ -3,12 +3,12 @@ module.exports = {
   init: function(dbPool) {
     connectionPool = dbPool;
   },
-    addNewLikes: function(userId, recipeId, like, callback) {
+    addNewLike: function(userId, recipeId, type, callback) {
       connectionPool.getConnection(function(err, connection) {
       if(err) {
         throw err;
       }
-      connection.query("INSERT INTO Likes (UserId, RecipeId, Likes) VALUES (?, ?, ?)", [userId, recipeId, like], function(err, result){
+      connection.query("INSERT INTO Likes (UserId, RecipeId, Type) VALUES (?, ?, ?)", [userId, recipeId, type], function(err, result){
         if(err) {
           throw err;
         }

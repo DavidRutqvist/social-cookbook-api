@@ -109,8 +109,85 @@ module.exports = function(app, router, database) {
     });
   });
 
-  router.put("/recipes/:id/:param", function(req, res) {
-    //Update the parameter :param in recipe with id req.params.id
+  router.post("/recipes/:id/likes/:type", function(req, res) {
+    var typeId = 0;
+    if(req.params.type.toLowerCase() === "yum") {
+      typeId = 1;
+    }
+    else if(req.params.type.toLowerCase() === "yuck") {
+      typeId = 0;
+    }
+    else {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid like type"
+      });
+    }
+
+    database.likes.getLikeByUser(req.decoded.userId, req.params.id, function(success, type) {
+      if(success) {
+        res.status(400).json({
+          success: false,
+          message: "You already like this recipe. You may only like it once, either yum or yuck not both."
+        });
+      }
+      else {
+        database.likes.addNewLike(req.decoded.userId, req.params.id, typeId, function(success, likeId) {
+          if(success) {
+            res.status(201).json({
+              success: true
+            });
+          }
+          else {
+            res.status(500).json({
+              success: false,
+              message: "Could not add new like"
+            });
+          }
+        });
+      }
+    });
+  });
+
+  router.get("/recipes/:id/likes", function(req, res) {
+    database.likes.getLikes(req.params.id, function(success, likes) {
+      if(success) {
+        res.json(likes);
+      }
+      else {
+        res.status(500).json({
+          success: false,
+          message: "Could not get likes"
+        })
+      }
+    });
+  });
+
+  router.get("/recipes/:id/likes/me", function(req, res) {
+    database.likes.getLikeByUser(req.decoded.userId, req.params.id, function(success, type) {
+      if(success) {
+        var typeName = "";
+        if(type === 0) {
+          typeName = "yuck";
+        }
+        else if(type === 1) {
+          typeName = "yum";
+        }
+        res.json({
+          likes: true,
+          type: typeName
+        });
+      }
+      else {
+        res.json({
+          likes: false
+        });
+      }
+    })
+  });
+
+  router.put("/recipes/:id", function(req, res) {
+    //Update the parameters supplied in the request body in recipe with id req.params.id
     res.json({
       message: "Not yet implemented"
     });
