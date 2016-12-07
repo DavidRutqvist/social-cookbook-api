@@ -1,8 +1,31 @@
 module.exports = function(app, router, database) {
   router.get("/recipes", function(req, res) {
     //Get all recipes with pagination
-    res.json({
-      message: "Not yet implemented"
+    var page = 1;
+    var pageSize = 20;
+    var newestFirst = true;
+
+    if(req.query.page !== undefined) {
+      page = req.query.page;
+    }
+
+    if(req.query.order !== undefined) {
+      if(req.query.order.toLowerCase() === "asc") {
+        newestFirst = false;
+      }
+    }
+
+    database.recipes.count(function(recipeCount) {
+      database.recipes.getList(page, pageSize, newestFirst, function(recipes) {
+        var responseObject = {
+          page: page,
+          pageSize: pageSize,
+          totalCount: recipeCount,
+          recipes: recipes
+        };
+
+        res.json(responseObject);
+      });
     });
   });
 

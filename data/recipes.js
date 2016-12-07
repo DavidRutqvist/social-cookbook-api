@@ -51,12 +51,72 @@ module.exports = {
       });
     });
   },
-  get: function(recipeId, callback) {
-    connectionPool.getConnection(function(err, connection) {//TODO: Add left join with images
-      connection.query("SELECT Recipes.Id AS recipeId, Recipes.Title AS title, Recipes.Content AS content, Recipes.CreationTime AS creationTime, Recipes.NumberOfPortions AS numberOfPortions, \
+  count: function(callback) {
+    connectionPool.getConnection(function(err, connection) {
+      if(err) {
+        throw err;
+      }
+
+      connection.query("SELECT COUNT(*) AS count FROM Recipes", function(err, rows, fields) {
+        if(err) {
+          throw err;
+        }
+
+        connection.release();
+        callback(rows[0].count);
+      });
+    });
+  },
+  getList: function(page, pageSize, newestFirst, callback) {
+    connectionPool.getConnection(function(err, connection) {
+      if(err) {
+        throw err;
+      }
+
+      var order = "DESC";
+      if(newestFirst === false) {
+        order = "ASC";
+      }
+      connection.query("SELECT Recipes.Id AS recipeId, Recipes.Title AS title, Recipes.CreationTime AS creationTime, \
                           Users.FirstName AS firstName, Users.LastName AS lastName, Users.Id AS userId \
                         FROM Recipes \
                         JOIN Users ON Recipes.UserId = Users.Id \
+                        ORDER BY creationTime " + order + " \
+                        LIMIT ?, ?", [(page - 1) * pageSize, pageSize], function(err, rows, fields) {
+                          if(err) {
+                            throw err;
+                          }
+
+                          var recipes = [];
+                          for(var i = 0; i < rows.length; i++) {
+                            var row = rows[i];
+                            var recipe = {
+                              id: row.recipeId,
+                              title: row.title,
+                              creationTime: row.creationTime,
+                              byUser: {
+                                id: row.userId,
+                                firstName: row.firstName,
+                                lastName: row.lastName
+                              }
+                            };
+
+                            recipes.push(recipe);
+                          }
+
+                          connection.release();
+                          callback(recipes);
+                        });
+    });
+  },
+  get: function(recipeId, callback) {
+    connectionPool.getConnection(function(err, connection) {//TODO: Add left join with images
+      connection.query("SELECT Recipes.Id AS recipeId, Recipes.Title AS title, Recipes.Content AS content, Recipes.CreationTime AS creationTime, Recipes.NumberOfPortions AS numberOfPortions, \
+                          Users.FirstName AS firstName, Users.LastName AS lastName, Users.Id AS userId, \
+                          Images.Id AS imageId, Images.Thumbnail AS imageThumbnail, Images.Original AS imageOriginal \
+                        FROM Recipes \
+                        JOIN Users ON Recipes.UserId = Users.Id \
+                        LEFT OUTER JOIN Images ON Recipes.ImageId = Images.Id \
                         WHERE Recipes.Id = ? LIMIT 1", [recipeId], function(err, rows, fields) {
                           if(err) {
                             throw err;
@@ -76,12 +136,25 @@ module.exports = {
                               }
                             };
 
+                            if((rows[0].imageId !== undefined) && (rows[0].imageId !== null)) {
+                              recipe.image = {
+                                id: rows[0].imageId,
+                                thumbnail: rows[0].imageThumbnail,
+                                original: rows[0].imageOriginal
+                              };
+                            }
+                            else {
+                              recipe.image = null;
+                            }
+
                             getIngredients(connection, recipe, function(recipe) {
                               getLikes(connection, recipe, function(success, recipe) {
                                 if(success) {
+                                  connection.release();
                                   callback(true, recipe);
                                 }
                                 else {
+                                  connection.release();
                                   callback(false, recipe);
                                 }
                               });
