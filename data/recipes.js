@@ -2,6 +2,7 @@ var connectionPool;
 var ingredientsHelper = require("./ingredients");
 var likesHelper = require("./likes");
 var commentsHelper = require("./comments");
+var tagsHelper = require("./tags")
 module.exports = {
   init: function(dbPool) {
     connectionPool = dbPool;
@@ -169,16 +170,18 @@ module.exports = {
                             }
 
                             getIngredients(connection, recipe, function(recipe) {
-                              getComments(connection, recipe, function(recipe){
-                                getLikes(connection, recipe, function(success, recipe) {
-                                  if(success) {
-                                    connection.release();
-                                    callback(true, recipe);
-                                  }
-                                  else {
-                                    connection.release();
-                                    callback(false, recipe);
-                                  }
+                              getRecipeTags(connection, recipe, function(recipe){
+                                getComments(connection, recipe, function(recipe){
+                                  getLikes(connection, recipe, function(success, recipe) {
+                                    if(success) {
+                                      connection.release();
+                                      callback(true, recipe);
+                                    }
+                                    else {
+                                      connection.release();
+                                      callback(false, recipe);
+                                    }
+                                  });
                                 });
                               });
                             });
@@ -239,6 +242,13 @@ function getComments(connection, recipe, callback) {
     recipe.comments = comments;
     callback(recipe);
   });
+}
+
+function getRecipeTags(connection, recipe, callback){
+  tagsHelper.getRecipeTags(connection, recipe.id, function(tags){
+    recipe.tags = tags;
+  });
+  callback(recipe);
 }
 
 function getIngredients(connection, recipe, callback) {
