@@ -3,6 +3,8 @@ var install = require("./install/install");
 var recipes = require("./recipes");
 var ingredients = require("./ingredients");
 var likes = require("./likes");
+var comments = require("./comments");
+var tags = require("./tags");
 var connectionPool = {};
 module.exports = {
   init: function(config) {
@@ -26,6 +28,8 @@ module.exports = {
     recipes.init(connectionPool, ingredients);
     ingredients.init(connectionPool);
     likes.init(connectionPool);
+    comments.init(connectionPool);
+    tags.init(connectionPool);
   },
   isAdmin: function(userId, callback) {
     connectionPool.getConnection(function(err, connection) {
@@ -106,7 +110,9 @@ module.exports = {
   },
   recipes: recipes,
   ingredients: ingredients,
-  likes: likes
+  likes: likes,
+  comments : comments,
+  tags : tags
 }
 
 function checkInheritedRole(connection, roleId, callback) {

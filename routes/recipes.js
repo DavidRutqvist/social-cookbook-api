@@ -66,21 +66,37 @@ module.exports = function(app, router, database) {
       }
     }
 
+    var tags = [];
+    if(req.body.tags !== undefined){
+      tags = req.body.tags;
+    }
+
     database.recipes.insert(req.decoded.userId, req.body.title, req.body.content, req.body.numberOfPortions, req.body.ingredients , req.body.image, function(success, recipeId) {
       if(success) {
-        database.recipes.addIngredients(recipeId, req.body.ingredients, function(succcess, numberOfAddedIngredients) {
-          if(success) {
-            res.status(201).json({
-              success: true,
-              recipeId: recipeId,
-              message: "Recipe created successfully"
+        database.tags.addTags(recipeId, tags, function(success, numberOfAddedTags){
+          if(success){
+            database.recipes.addIngredients(recipeId, req.body.ingredients, function(succcess, numberOfAddedIngredients) {
+              if(success) {
+                res.status(201).json({
+                  success: true,
+                  recipeId: recipeId,
+                  message: "Recipe created successfully"
+                });
+              }
+              else {
+                res.status(201).json({
+                  success: true,
+                  recipeId: recipeId,
+                  message: "Recipe was created but only " + numberOfAddedIngredients + " ingredients could be added the rest failed"
+                });
+              }
             });
           }
           else {
             res.status(201).json({
               success: true,
               recipeId: recipeId,
-              message: "Recipe was create but only " + numberOfAddedIngredients + " ingredients could be added the rest failed"
+              message: "Recipe was created but only " + numberOfAddedTags + " tags could be added the rest failed"
             });
           }
         });
