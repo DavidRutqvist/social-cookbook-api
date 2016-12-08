@@ -197,7 +197,7 @@ module.exports = function(app, router, database) {
     //Delete recipe with id req.params.id
     database.recipes.getCreator(req.params.id, function(success, creatorId) {
       if(success) {
-        if(creatorId === req.decoded.userId) {
+        if(creatorId.toString() === req.decoded.userId.toString()) {
           deleteRecipe(res, database.recipes, req.params.id);
         }
         else {

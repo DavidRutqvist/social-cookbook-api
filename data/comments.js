@@ -24,7 +24,7 @@ module.exports = {
       });
     });
   },
-  removeComment: function(commentId, userId, recipeId, callback){
+  removeCommentFromRecipe: function(commentId, userId, recipeId, callback){
     connectionPool.getConnection(function(err, connection){
       if(err){
         throw err;
@@ -45,25 +45,29 @@ module.exports = {
       });
     });
   },
-  removeCommentFromRecipe: function(commentId, recipeId, callback){
+  removeCommentsFromRecipe: function(recipeId, callback){
     connectionPool.getConnection(function(err, connection){
       if(err){
         throw err;
       }
-      connection.query("DELETE FROM Comments WHERE Id = ? AND RecipeId = ?", [commentId, recipeId], function(err, result){
-        if(err){
-          throw err;
-        }
-
-        if(result.affectedRows > 0){
-          connection.release();
-          callback(true);
-        }
-        else {
-          connection.release();
-          callback(false);
-        }
+      removeCommentsFromRecipe(connection, recipeId, function(success) {
+        connection.release();
+        callback(success);
       });
+    });
+  },
+  removeCommentsFromRecipe: function(connection, recipeId, callback){
+    connection.query("DELETE FROM Comments WHERE RecipeId = ?", [recipeId], function(err, result){
+      if(err){
+        throw err;
+      }
+
+      if(result.affectedRows > 0){
+        callback(true);
+      }
+      else {
+        callback(false);
+      }
     });
   },
   updateComment: function(commentId, userId, recipeId, content, callback){

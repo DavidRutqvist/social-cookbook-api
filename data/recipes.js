@@ -198,26 +198,24 @@ module.exports = {
       likesHelper.removeLikesFromRecipe(connection, recipeId, function(affectedRows) {
         //We don't care about affectedRows since there may be zero likes
         ingredientsHelper.deleteIngredientsFromRecipe(connection, recipeId, function(affectedRows) {
-          if(affectedRows > 0) {
-            connection.query("DELETE FROM Recipes WHERE Recipes.Id = ?", [recipeId], function(err, result) {
-              if(err) {
-                throw err;
-              }
+          commentsHelper.removeCommentsFromRecipe(connection, recipeId, function(success){
+            tagsHelper.removeTagsFromRecipe(connection, recipeId, function(success){
+              connection.query("DELETE FROM Recipes WHERE Recipes.Id = ?", [recipeId], function(err, result) {
+                if(err) {
+                  throw err;
+                }
 
-              if(result.affectedRows > 0) {
-                connection.release();
-                callback(true);
-              }
-              else {
-                connection.release();
-                callback(false);
-              }
+                if(result.affectedRows > 0) {
+                  connection.release();
+                  callback(true);
+                }
+                else {
+                  connection.release();
+                  callback(false);
+                }
+              });
             });
-          }
-          else {
-            connection.release();
-            callback(false);
-          }
+          });
         });
       });
     });

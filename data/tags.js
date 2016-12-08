@@ -64,19 +64,23 @@ module.exports = {
       if(err){
         throw err;
       }
-      connection.query("DELETE FROM RecipeTags WHERE RecipeId = ?", [recipeId], function(err, result){
-        if(err) {
-          throw err;
-        }
-        if(result.affectedRows > 0){
-          connection.release();
-          callback(true);
-        }
-        else{
-          connection.release();
-          callback(false);
-        }
+      removeTagsFromRecipe(connection, recipeId, function(success){
+        connection.release();
+        callback(success);
       });
+    });
+  },
+  removeTagsFromRecipe: function(connection, recipeId, callback){
+    connection.query("DELETE FROM RecipeTags WHERE RecipeId = ?", [recipeId], function(err, result){
+      if(err) {
+        throw err;
+      }
+      if(result.affectedRows > 0){
+        callback(true);
+      }
+      else{
+        callback(false);
+      }
     });
   },
   getRecipeTags: function(recipeId, callback){
