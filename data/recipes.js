@@ -1,6 +1,7 @@
 var connectionPool;
 var ingredientsHelper = require("./ingredients");
 var likesHelper = require("./likes");
+var commentsHelper = require("./comments");
 module.exports = {
   init: function(dbPool) {
     connectionPool = dbPool;
@@ -168,15 +169,17 @@ module.exports = {
                             }
 
                             getIngredients(connection, recipe, function(recipe) {
-                              getLikes(connection, recipe, function(success, recipe) {
-                                if(success) {
-                                  connection.release();
-                                  callback(true, recipe);
-                                }
-                                else {
-                                  connection.release();
-                                  callback(false, recipe);
-                                }
+                              getComments(connection, recipe, function(recipe){
+                                getLikes(connection, recipe, function(success, recipe) {
+                                  if(success) {
+                                    connection.release();
+                                    callback(true, recipe);
+                                  }
+                                  else {
+                                    connection.release();
+                                    callback(false, recipe);
+                                  }
+                                });
                               });
                             });
                           }
@@ -228,6 +231,13 @@ function getLikes(connection, recipe, callback) {
     else {
       callback(false, recipe);
     }
+  });
+}
+
+function getComments(connection, recipe, callback) {
+  commentsHelper.getComments(connection, recipe.id, function(comments) {
+    recipe.comments = comments;
+    callback(recipe);
   });
 }
 
