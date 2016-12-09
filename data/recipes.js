@@ -69,6 +69,28 @@ module.exports = {
       });
     });
   },
+  setImage: function(recipeId, imageId, callback) {
+    connectionPool.getConnection(function(err, connection) {
+      if(err) {
+        throw err;
+      }
+
+      connection.query("UPDATE Recipes SET ImageId = ? WHERE Id = ?", [imageId, recipeId], function(err, result) {
+        if(err) {
+          throw err;
+        }
+
+        if(result.affectedRows > 0) {
+          connection.release();
+          callback(true);
+        }
+        else {
+          connection.release();
+          callback(false);
+        }
+      });
+    });
+  },
   getList: function(page, pageSize, newestFirst, callback) {
     connectionPool.getConnection(function(err, connection) {
       if(err) {
@@ -132,10 +154,10 @@ module.exports = {
     });
   },
   get: function(recipeId, callback) {
-    connectionPool.getConnection(function(err, connection) {//TODO: Add left join with images
+    connectionPool.getConnection(function(err, connection) {
       connection.query("SELECT Recipes.Id AS recipeId, Recipes.Title AS title, Recipes.Content AS content, Recipes.CreationTime AS creationTime, Recipes.NumberOfPortions AS numberOfPortions, \
                           Users.FirstName AS firstName, Users.LastName AS lastName, Users.Id AS userId, \
-                          Images.Id AS imageId, Images.Thumbnail AS imageThumbnail, Images.Original AS imageOriginal \
+                          Images.Original AS image \
                         FROM Recipes \
                         JOIN Users ON Recipes.UserId = Users.Id \
                         LEFT OUTER JOIN Images ON Recipes.ImageId = Images.Id \
@@ -151,23 +173,13 @@ module.exports = {
                               creationTime: rows[0].creationTime,
                               numberOfPortions: rows[0].numberOfPortions,
                               content: rows[0].content,
+                              image: rows[0].image,
                               byUser: {
                                 id: rows[0].userId,
                                 firstName: rows[0].firstName,
                                 lastName: rows[0].lastName
                               }
                             };
-
-                            if((rows[0].imageId !== undefined) && (rows[0].imageId !== null)) {
-                              recipe.image = {
-                                id: rows[0].imageId,
-                                thumbnail: rows[0].imageThumbnail,
-                                original: rows[0].imageOriginal
-                              };
-                            }
-                            else {
-                              recipe.image = null;
-                            }
 
                             getIngredients(connection, recipe, function(recipe) {
                               getRecipeTags(connection, recipe, function(recipe){

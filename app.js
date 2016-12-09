@@ -26,6 +26,8 @@ app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
+app.use(config.staticAddress, express.static(__dirname + config.uploadLocation));
+
 var router = express.Router();
 app.use("/api", router);//Prepend all calls with /api
 

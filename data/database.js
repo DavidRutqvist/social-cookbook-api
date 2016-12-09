@@ -5,6 +5,7 @@ var ingredients = require("./ingredients");
 var likes = require("./likes");
 var comments = require("./comments");
 var tags = require("./tags");
+var images = require("./images");
 var connectionPool = {};
 module.exports = {
   init: function(config) {
@@ -30,6 +31,7 @@ module.exports = {
     likes.init(connectionPool);
     comments.init(connectionPool);
     tags.init(connectionPool);
+    images.init(connectionPool, config);
   },
   isAdmin: function(userId, callback) {
     connectionPool.getConnection(function(err, connection) {
@@ -112,7 +114,8 @@ module.exports = {
   ingredients: ingredients,
   likes: likes,
   comments : comments,
-  tags : tags
+  tags : tags,
+  images: images
 }
 
 function checkInheritedRole(connection, roleId, callback) {

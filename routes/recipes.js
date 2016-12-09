@@ -1,3 +1,5 @@
+var multer = require('multer');
+var upload = multer();
 module.exports = function(app, router, database) {
   router.get("/recipes", function(req, res) {
     //Get all recipes with pagination
@@ -71,7 +73,7 @@ module.exports = function(app, router, database) {
       tags = req.body.tags;
     }
 
-    database.recipes.insert(req.decoded.userId, req.body.title, req.body.content, req.body.numberOfPortions, req.body.ingredients , req.body.image, function(success, recipeId) {
+    database.recipes.insert(req.decoded.userId, req.body.title, req.body.content, req.body.numberOfPortions, req.body.ingredients , null, function(success, recipeId) {
       if(success) {
         database.tags.addTags(recipeId, tags, function(success, numberOfAddedTags){
           if(success){
@@ -207,6 +209,52 @@ module.exports = function(app, router, database) {
     res.json({
       message: "Not yet implemented"
     });
+  });
+
+  router.put("/recipes/:id/image", upload.single('image'), function(req, res) {
+    if(req.file !== undefined) {
+      database.images.upload(req.decoded.userId, req.file, function(image) {
+        //Update image in database
+        if((image !== undefined) && (image !== null)) {
+          database.recipes.setImage(req.params.id, image, function(success) {
+            if(success) {
+              res.json({
+                success: true
+              });
+            }
+            else {
+              //Recipe not found
+              res.status(404).json({
+                success: false,
+                message: "Recipe not found"
+              });
+            }
+          });
+        }
+        else {
+          res.status(500).json({
+            success: false,
+            message: "File upload failed"
+          });
+        }
+      });
+    }
+    else {//Remove image from recipe, i.e. set null
+      database.recipes.setImage(req.params.id, null, function(success) {
+        if(success) {
+          res.json({
+            success: true
+          });
+        }
+        else {
+          //Recipe not found
+          res.status(404).json({
+            success: false,
+            message: "Recipe not found"
+          });
+        }
+      });
+    }
   });
 
   router.delete("/recipes/:id", function(req, res) {

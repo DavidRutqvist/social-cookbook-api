@@ -1,5 +1,6 @@
 var version1 = require("./version1");
 var version2 = require("./version2");
+var version3 = require("./version3");
 
 module.exports = {
   install: function(connectionPool) {
@@ -24,6 +25,9 @@ function doInstallStep(connection, currentVersion) {
     version2.install(connection, doInstallStep);
   }
   else if(currentVersion == 2) {
+    version3.install(connection, doInstallStep);
+  }
+  else if(currentVersion == 3) {
     finalizeInstallation(connection, currentVersion);
   }
   else {

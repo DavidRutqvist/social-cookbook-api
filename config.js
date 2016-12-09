@@ -1,4 +1,6 @@
 module.exports = {
   secret: "cookbook-api-secret-kHgqzBMRk5",
-  databaseConnectionString: null
+  databaseConnectionString: null,
+  uploadLocation: "/uploads",
+  staticAddress: "/static"
 };

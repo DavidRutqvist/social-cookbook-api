@@ -13,7 +13,9 @@
     "https": "^1.0.0",
     "jsonwebtoken": "^7.1.9",
     "morgan": "~1.7.0",
+    "multer": "^1.2.0",
     "mysql": "^2.12.0",
+    "node-uuid": "^1.4.7",
     "nutritionix": "^0.6.1",
     "querystring": "^0.2.0"
   }
