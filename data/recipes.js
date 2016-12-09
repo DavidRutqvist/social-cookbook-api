@@ -235,7 +235,7 @@ module.exports = {
 }
 
 function getLikes(connection, recipe, callback) {
-  likesHelper.getLikes(connection, recipe.id, function(success, likes){
+  likesHelper.getLikesUsingConnection(connection, recipe.id, function(success, likes){
     if(success)
     {
       recipe.likes = likes;

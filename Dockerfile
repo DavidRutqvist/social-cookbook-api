@@ -8,6 +8,9 @@ WORKDIR /usr/src/app
 COPY package.json /usr/src/app/
 RUN npm install
 
+#Create upload directory
+RUN mkdir -p uploads
+
 # Bundle app source
 COPY . /usr/src/app
 

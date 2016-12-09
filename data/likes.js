@@ -29,39 +29,15 @@ module.exports = {
         if(err) {
           throw err;
         }
-        getLikes(connection, recipeId, function(success, likes) {
+        getLikesWithConnection(connection, recipeId, function(success, likes) {
           connection.release();
           callback(success, likes);
         });
       });
     },
-    getLikes: function(connection, recipeId, callback){
-      connection.query("SELECT COUNT(*) AS count, Type AS type FROM Likes WHERE RecipeId = ? GROUP BY Type", [recipeId], function(err, rows, fields) {
-        if(err) {
-          throw err;
-        }
-        var likes = {
-          yum: 0,
-          yuck: 0
-        };
-        if(rows.length > 0) {
-            for(var i = 0; i < rows.length; i++) {
-              if(rows[i].type === 1) {
-                likes.yum = rows[i].count;
-              }
-              else if(rows[i].type === 0) {
-                likes.yuck = rows[i].count;
-              }
-              else {
-                console.log("Unknown like type");
-              }
-            }
-
-            callback(true, likes);
-        }
-        else  {
-          callback(true, likes);
-        }
+    getLikesUsingConnection: function(connection, recipeId, callback) {
+      getLikesWithConnection(connection, recipeId, function(success, likes) {
+        callback(success, likes);
       });
     },
     getLikeByUser: function(userId, recipeId, callback) {
@@ -134,3 +110,33 @@ module.exports = {
       });
     }
 };
+
+function getLikesWithConnection(connection, recipeId, callback){
+  connection.query("SELECT COUNT(*) AS count, Type AS type FROM Likes WHERE RecipeId = ? GROUP BY Type", [recipeId], function(err, rows, fields) {
+    if(err) {
+      throw err;
+    }
+    var likes = {
+      yum: 0,
+      yuck: 0
+    };
+    if(rows.length > 0) {
+        for(var i = 0; i < rows.length; i++) {
+          if(rows[i].type === 1) {
+            likes.yum = rows[i].count;
+          }
+          else if(rows[i].type === 0) {
+            likes.yuck = rows[i].count;
+          }
+          else {
+            console.log("Unknown like type");
+          }
+        }
+
+        callback(true, likes);
+    }
+    else  {
+      callback(true, likes);
+    }
+  });
+}
