@@ -14,6 +14,6 @@ RUN mkdir -p uploads
 # Bundle app source
 COPY . /usr/src/app
 
-EXPOSE 3000
+EXPOSE 3001
 ENTRYPOINT [ "npm", "start", "--", "-d" ]
 CMD [ "mysql://apiUser:5TYnyNsH8g@127.0.0.1/cookbook?flags=MULTI_STATEMENTS" ]
