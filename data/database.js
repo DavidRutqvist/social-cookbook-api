@@ -6,6 +6,7 @@ var likes = require("./likes");
 var comments = require("./comments");
 var tags = require("./tags");
 var images = require("./images");
+var favorites = require("./favorites");
 var connectionPool = {};
 var connectionConfig = require("mysql/lib/ConnectionConfig");
 module.exports = {
@@ -35,6 +36,7 @@ module.exports = {
     likes.init(connectionPool);
     comments.init(connectionPool);
     tags.init(connectionPool);
+    favorites.init(connectionPool);
     images.init(connectionPool, config);
   },
   isAdmin: function(userId, callback) {
@@ -119,7 +121,8 @@ module.exports = {
   likes: likes,
   comments : comments,
   tags : tags,
-  images: images
+  images: images,
+  favorites: favorites
 }
 
 function checkInheritedRole(connection, roleId, callback) {
