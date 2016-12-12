@@ -127,6 +127,30 @@ module.exports = function(app, router, database) {
     });
   });
 
+  router.post("/recipes/:id/comments", function(req, res) {
+    if((req.body.comment === undefined) || (req.body.comment === null) || (req.body.comment === "")) {
+      res.status(400).json({
+        success: false,
+        message: "Missing mandatory comment"
+      });
+    }
+    else {
+      database.comments.addNewComment(req.decoded.userId, req.params.id, req.body.comment, function(success, commentId) {
+        if(success) {
+          res.json({
+            success: true
+          });
+        }
+        else {
+          res.status(500).json({
+            success: false,
+            message: "Could not add comment"
+          });
+        }
+      })
+    }
+  });
+
   router.post("/recipes/:id/likes/:type", function(req, res) {
     var typeId = 0;
     if(req.params.type.toLowerCase() === "yum") {

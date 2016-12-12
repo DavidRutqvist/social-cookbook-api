@@ -7,9 +7,13 @@ var comments = require("./comments");
 var tags = require("./tags");
 var images = require("./images");
 var connectionPool = {};
+var connectionConfig = require("mysql/lib/ConnectionConfig");
 module.exports = {
   init: function(config) {
-    connectionPool = mysql.createPool(config.databaseConnectionString);//Will create a pool of 10 connections (default)
+    var dbConfig = connectionConfig.parseUrl(config.databaseConnectionString);
+    dbConfig.multipleStatements = true;
+    dbConfig.supportBigNumbers = true;
+    connectionPool = mysql.createPool(dbConfig);//Will create a pool of 10 connections (default)
 
     //Test connection
     console.log("Trying to connect to database");

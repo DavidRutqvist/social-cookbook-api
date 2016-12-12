@@ -8,7 +8,7 @@ module.exports = {
       if(err){
         throw err;
       }
-      connection.query("INSERT INTO Comments (UserId, RecipeId, Content) VALUES ?, ?, ?", [userId, recipeId, content], function(err, result){
+      connection.query("INSERT INTO Comments (UserId, RecipeId, Content) VALUES (?, ?, ?)", [userId, recipeId, content], function(err, result){
         if(err){
           throw err;
         }
@@ -103,10 +103,11 @@ module.exports = {
     });
   },
   getComments: function(connection, recipeId, callback){
-    connection.query("SELECT Comments.Id As commentId, Content AS content, FirstName AS firstName, LastName AS lastName FROM Comments INNER JOIN Users WHERE RecipeId = ? AND Comments.UserId = Users.Id", [recipeId], function(err, rows, fields){
+    connection.query("SELECT Comments.Id As id, Content AS content, FirstName AS firstName, LastName AS lastName, CreationTime AS creationTime, UserId AS userId FROM Comments INNER JOIN Users ON Users.Id = Comments.UserId WHERE RecipeId = ?", [recipeId], function(err, rows, fields){
       if(err){
         throw err;
       }
+      console.log(rows);
       callback(rows);
     });
   }

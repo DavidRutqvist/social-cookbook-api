@@ -253,6 +253,7 @@ function getLikes(connection, recipe, callback) {
 function getComments(connection, recipe, callback) {
   commentsHelper.getComments(connection, recipe.id, function(comments) {
     recipe.comments = comments;
+    console.log(comments);
     callback(recipe);
   });
 }
