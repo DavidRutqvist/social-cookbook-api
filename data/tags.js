@@ -86,6 +86,18 @@ module.exports = {
       }
       callback(tags);
     });
+  },
+  getRecipesByTag: function(tag, newestFirst, callback) {
+    connectionPool.getConnection(function(err, connection){
+      if(err){
+        throw err;
+      }
+      console.log(tag);
+      getRecipesByTag(connection, tag, newestFirst, function(success, recipes){
+        connection.release();
+        callback(success, recipes);
+      });
+    });
   }
 }
 
@@ -112,6 +124,46 @@ function addOrGet(connection, tag, callback){
         }
       });
     }
+  });
+}
+
+function getRecipesByTag(connection, tag, newestFirst, callback) {
+  var order = "DESC";
+  if(newestFirst === false){
+    order = "ASC";
+  }
+  connection.query("SELECT Recipes.Id AS recipeId, Recipes.Title AS title, Recipes.CreationTime AS creationTime, \
+  Users.FirstName AS firstName, Users.LastName AS lastName, Users.Id AS userId, \
+  Images.Original AS image \
+  FROM Tags \
+  JOIN RecipeTags On RecipeTags.TagId = Tags.Id \
+  JOIN Recipes On RecipeTags.RecipeId = Recipes.Id \
+  JOIN Users ON Recipes.UserId = Users.Id \
+  LEFT OUTER JOIN Images ON Recipes.ImageId = Images.Id \
+  WHERE Tags.Name = ?  \
+  ORDER BY creationTime " + order , [tag], function(err, rows, fields){
+    if(err){
+      throw err;
+    }
+
+    var recipes = [];
+    for(var i = 0; i < rows.length; i++){
+      var row = rows[i];
+      var recipe = {
+        id: row.recipeId,
+        title: row.title,
+        creationTime: row.creationTime,
+        image: row.image,
+        byUser: {
+          id: row.userId,
+          firstName: row.firstName,
+          lastName: row.lastName
+        }
+      };
+
+      recipes.push(recipe);
+    }
+    callback(true, recipes);
   });
 }
 
