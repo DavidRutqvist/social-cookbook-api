@@ -112,7 +112,7 @@ module.exports = {
 }
 
 function getTags(connection, callback) {
-  connection.query("SELECT Tags.Name AS name, COUNT(RecipeTags.RecipeId) AS count FROM Tags JOIN RecipeTags ON RecipeTags.TagId = Tags.Id GROUP BY (Tags.Name)", function(err, rows, fields){
+  connection.query("SELECT Tags.Name AS name, COUNT(RecipeTags.RecipeId) AS count FROM Tags JOIN RecipeTags ON RecipeTags.TagId = Tags.Id GROUP BY (Tags.Name) ORDER BY count DESC LIMIT 100", function(err, rows, fields){
     var tags = [];
       for(var i = 0; i < rows.length; i++){
         var row = rows[i];
