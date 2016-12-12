@@ -92,13 +92,38 @@ module.exports = {
       if(err){
         throw err;
       }
-      console.log(tag);
       getRecipesByTag(connection, tag, newestFirst, function(success, recipes){
         connection.release();
         callback(success, recipes);
       });
     });
+  },
+  getTags: function(callback) {
+    connectionPool.getConnection(function(err, connection){
+      if(err){
+        throw err;
+      }
+      getTags(connection, function(success, tags){
+        connection.release();
+        callback(success, tags);
+      });
+    });
   }
+}
+
+function getTags(connection, callback) {
+  connection.query("SELECT Tags.Name AS name, COUNT(RecipeTags.RecipeId) AS count FROM Tags JOIN RecipeTags ON RecipeTags.TagId = Tags.Id GROUP BY (Tags.Name)", function(err, rows, fields){
+    var tags = [];
+      for(var i = 0; i < rows.length; i++){
+        var row = rows[i];
+        var tag = {
+          name : row.name,
+          count : row.count
+        };
+        tags.push(tag);
+      }
+      callback(true, tags);
+  });
 }
 
 function addOrGet(connection, tag, callback){

@@ -35,6 +35,7 @@ app.use("/api", router);//Prepend all calls with /api
 require("./routes/index")(app, router, jwt, util, database);//Important that this one is first since it provides authentication
 require("./routes/recipes")(app, router, database);
 require("./routes/favorites")(app, router, database);
+require("./routes/tags")(app, router, database);
 
 /*
 // catch 404 and forward to error handler
