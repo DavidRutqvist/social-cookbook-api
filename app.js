@@ -36,6 +36,7 @@ require("./routes/index")(app, router, jwt, util, database);//Important that thi
 require("./routes/recipes")(app, router, database);
 require("./routes/favorites")(app, router, database);
 require("./routes/tags")(app, router, database);
+require("./routes/users")(app, router, database);
 
 /*
 // catch 404 and forward to error handler

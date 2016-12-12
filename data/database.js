@@ -116,6 +116,31 @@ module.exports = {
       });
     });
   },
+  getUsers: function(callback){
+    connectionPool.getConnection(function(err, connection){
+      if(err){
+        throw err;
+      }
+      connection.query("SELECT Id AS userId, Email AS email, FirstName AS firstName, LastName AS lastName FROM USERS", function(err, rows, fields) {
+        if(err){
+          throw err;
+        }
+
+        var users = [];
+        for(var i = 0; i < rows.length; i++){
+          var row = rows[i];
+          var user = {
+            userId : row.userId,
+            email : row.email,
+            firstName : row.firstName,
+            lastName : row.lastName
+          };
+          users.push(user);
+        }
+        callback(true, users);
+      });
+    });
+  },
   recipes: recipes,
   ingredients: ingredients,
   likes: likes,
