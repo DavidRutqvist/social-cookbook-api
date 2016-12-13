@@ -62,7 +62,7 @@ module.exports = {
   },
   getUser: function(userId, callback) {
     connectionPool.getConnection(function(err, connection) {
-      connection.query("SELECT * FROM Users WHERE Id = ? LIMIT 1", [userId], function(err, rows, fields) {
+      connection.query("SELECT * FROM Users JOIN Roles ON Users.RoleId = Roles.Id WHERE Users.Id = ? LIMIT 1", [userId], function(err, rows, fields) {
         if(err) {
           throw err;
         }
@@ -72,7 +72,8 @@ module.exports = {
             userId: userId,
             firstName: rows[0].FirstName,
             lastName: rows[0].LastName,
-            email: rows[0].Email
+            email: rows[0].Email,
+            role: rows[0].Name
           };
 
           connection.release();
@@ -90,7 +91,7 @@ module.exports = {
       if(err){
         throw err;
       }
-      connection.query("SELECT Id AS userId, Email AS email, FirstName AS firstName, LastName AS lastName FROM USERS", function(err, rows, fields) {
+      connection.query("SELECT Id AS userId, Email AS email, FirstName AS firstName, LastName AS lastName, Roles.Name AS roleName FROM USERS JOIN Roles ON Users.RoleId = Roles.Id", function(err, rows, fields) {
         if(err){
           throw err;
         }
@@ -102,13 +103,55 @@ module.exports = {
             userId : row.userId,
             email : row.email,
             firstName : row.firstName,
-            lastName : row.lastName
+            lastName : row.lastName,
+            role: row.roleName
           };
           users.push(user);
         }
         nextIsAdmin(users, 0, function(success, users){
           callback(success, users);
         });
+      });
+    });
+  },
+  getRoles: function(callback){
+    connectionPool.getConnection(function(err, connection){
+      if(err){
+        throw err;
+      }
+      connection.query("SELECT Roles.Id AS roleId, Roles.Name AS roleName FROM Roles", function(err, rows, fields) {
+        if(err){
+          throw err;
+        }
+        var roles = [];
+        for(var i = 0; i < rows.length; i++){
+          var row = rows[i];
+          var role = {
+            roleId : row.roleId,
+            roleName: row.roleName
+          };
+          roles.push(role);
+        }
+        callback(roles);
+      });
+    });
+  },
+  setRole: function(userId, role, callback){
+    connectionPool.getConnection(function(err, connection){
+      if(err){
+        throw err;
+      }
+      console.log(role);
+      connection.query("UPDATE Users SET RoleId = ? WHERE Id = ?", [role, userId], function(err, result){
+        if(err){
+          throw err;
+        }
+        if(result.affectedRows > 0){
+          callback(true);
+        }
+        else{
+          callback(false);
+        }
       });
     });
   },
