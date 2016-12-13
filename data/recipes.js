@@ -208,6 +208,49 @@ module.exports = {
                         });
     });
   },
+  getRecipesByUser: function(userId, newestFirst, callback){
+    connectionPool.getConnection(function(err, connection){
+      if(err){
+        throw err;
+      }
+
+      var order = "DESC";
+      if(newestFirst === false){
+        order = "ASC";
+      }
+      connection.query("SELECT Recipes.Id AS recipeId, Recipes.Title AS title, Recipes.CreationTime AS creationTime, \
+      Users.FirstName AS firstName, Users.LastName AS lastName, Users.Id AS userId, \
+      Images.Original AS image \
+      FROM Users \
+      JOIN Recipes ON Recipes.UserId = Users.Id \
+      LEFT OUTER JOIN Images ON Recipes.ImageId = Images.Id \
+      WHERE Users.Id = ? \
+      ORDER BY creationTime " + order, [userId], function(err, rows, fields) {
+        if(err){
+          throw err;
+        }
+
+        var recipes = [];
+        for(var i = 0; i < rows.length; i++){
+          var row = rows[i];
+          var recipe = {
+            id: row.recipeId,
+            title: row.title,
+            creationTime: row.creationTime,
+            image: row.image,
+            byUser: {
+              id: row.userId,
+              firstName: row.firstName,
+              lastName: row.lastName
+            }
+          };
+
+          recipes.push(recipe);
+        }
+        callback(true, recipes);
+      });
+    });
+  },
   delete: function(recipeId, callback) {
     connectionPool.getConnection(function(err, connection) {
       likesHelper.removeLikesFromRecipe(connection, recipeId, function(affectedRows) {
