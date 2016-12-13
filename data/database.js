@@ -39,39 +39,8 @@ module.exports = {
     favorites.init(connectionPool);
     images.init(connectionPool, config);
   },
-  isAdmin: function(userId, callback) {
-    connectionPool.getConnection(function(err, connection) {
-      if(err) {
-        throw err;
-      }
-
-      connection.query("SELECT Roles.Name AS roleName, Roles.InheritRoleId AS inheritedRole FROM Users JOIN Roles ON Users.RoleId = Roles.Id WHERE Users.Id = ? LIMIT 1", [userId], function(err, rows, fields) {
-        if(err) {
-          throw err;
-        }
-
-        if(rows.length > 0) {
-          if(rows[0].roleName.toLowerCase() === "administrator") {
-            connection.release();
-            callback(true);
-          }
-          else if((rows[0].inheritedRole !== undefined) && (rows[0].inheritedRole !== null)) {
-            checkInheritedRole(connection, rows[0].inheritedRole, function(isAdmin) {
-              connection.release();
-              callback(isAdmin);
-            });
-          }
-          else {
-            connection.release();
-            callback(false);
-          }
-        }
-        else {
-          connection.release();
-          callback(false);
-        }
-      });
-    });
+  isAdmin(userId, callback){
+    isAdmin(userId, callback);
   },
   register: function(userId, firstName, lastName, email, callback) {
     connectionPool.getConnection(function(err, connection) {
@@ -137,7 +106,9 @@ module.exports = {
           };
           users.push(user);
         }
-        callback(true, users);
+        nextIsAdmin(users, 0, function(success, users){
+          callback(success, users);
+        });
       });
     });
   },
@@ -148,6 +119,53 @@ module.exports = {
   tags : tags,
   images: images,
   favorites: favorites
+}
+
+function isAdmin(userId, callback) {
+  connectionPool.getConnection(function(err, connection) {
+    if(err) {
+      throw err;
+    }
+
+    connection.query("SELECT Roles.Name AS roleName, Roles.InheritRoleId AS inheritedRole FROM Users JOIN Roles ON Users.RoleId = Roles.Id WHERE Users.Id = ? LIMIT 1", [userId], function(err, rows, fields) {
+      if(err) {
+        throw err;
+      }
+
+      if(rows.length > 0) {
+        if(rows[0].roleName.toLowerCase() === "administrator") {
+          connection.release();
+          callback(true);
+        }
+        else if((rows[0].inheritedRole !== undefined) && (rows[0].inheritedRole !== null)) {
+          checkInheritedRole(connection, rows[0].inheritedRole, function(isAdmin) {
+            connection.release();
+            callback(isAdmin);
+          });
+        }
+        else {
+          connection.release();
+          callback(false);
+        }
+      }
+      else {
+        connection.release();
+        callback(false);
+      }
+    });
+  });
+}
+
+function nextIsAdmin(users, index, callback) {
+  if(index < users.length){
+    isAdmin(users[index].userId, function(isAdmin){
+      users[index].isAdmin = isAdmin;
+      nextIsAdmin(users, index + 1, callback);
+    });
+  }
+  else{
+    callback(true, users);
+  }
 }
 
 function checkInheritedRole(connection, roleId, callback) {
