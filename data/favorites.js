@@ -103,7 +103,7 @@ function getFavorites(connection, userId, newestFirst, callback) {
   Images.Original AS image \
   FROM Favorites \
   JOIN Recipes On Favorites.RecipeId = Recipes.Id \
-  JOIN Users ON Favorites.UserId = Users.Id \
+  JOIN Users ON Recipes.UserId = Users.Id \
   LEFT OUTER JOIN Images ON Recipes.ImageId = Images.Id \
   WHERE Favorites.userId = ? \
   ORDER BY creationTime " + order , [userId], function(err, rows, fields){
