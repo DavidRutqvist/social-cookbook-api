@@ -88,7 +88,10 @@ function removeFavorite(connection, userId, recipeId, callback){
       callback(true);
     }
     else{
-      callback(false);
+      //Check if already deleted (i.e. if user uses multiple tabs)
+      checkIfFavorite(connection, userId, recipeId, function(isFavorite) {
+        callback(!isFavorite);//If not favorite then we say it was deleted since the user could have deleted it in another tab
+      });
     }
   });
 }
