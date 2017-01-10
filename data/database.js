@@ -91,7 +91,7 @@ module.exports = {
       if(err){
         throw err;
       }
-      connection.query("SELECT Id AS userId, Email AS email, FirstName AS firstName, LastName AS lastName, Roles.Name AS roleName FROM USERS JOIN Roles ON Users.RoleId = Roles.Id", function(err, rows, fields) {
+      connection.query("SELECT Users.Id AS userId, Email AS email, FirstName AS firstName, LastName AS lastName, Roles.Name AS roleName FROM USERS JOIN Roles ON Users.RoleId = Roles.Id", function(err, rows, fields) {
         if(err){
           throw err;
         }
@@ -108,6 +108,7 @@ module.exports = {
           };
           users.push(user);
         }
+
         nextIsAdmin(users, 0, function(success, users){
           callback(success, users);
         });
