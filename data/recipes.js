@@ -38,6 +38,7 @@ module.exports = {
       }
 
       addNextIngredient(connection, recipeId, 0, ingredients, function(success, numberOfAddedIngredients) {
+        connection.release();
         callback(success, numberOfAddedIngredients);
       });
     });
@@ -50,6 +51,7 @@ module.exports = {
 
       addIngredient(connection, recipeId, ingredientId, amount, unit, function(success) {
         connection.release();
+        callback(success);
       });
     });
   },
@@ -148,9 +150,11 @@ module.exports = {
         }
 
         if(rows.length > 0) {
+          connection.release();
           callback(true, rows[0].userId);
         }
         else {
+          connection.release();
           callback(false, null);
         }
       });
@@ -247,6 +251,7 @@ module.exports = {
 
           recipes.push(recipe);
         }
+        connection.release();
         callback(true, recipes);
       });
     });

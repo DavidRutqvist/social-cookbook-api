@@ -9,6 +9,7 @@ module.exports = {
         throw err;
       }
       addNextTag(connection, recipeId, 0, tags, function(success, numberOfAddedTags){
+        connection.release();
         callback(success, numberOfAddedTags);
       });
     });

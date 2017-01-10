@@ -134,6 +134,7 @@ module.exports = {
           };
           roles.push(role);
         }
+        connection.release();
         callback(roles);
       });
     });
@@ -149,9 +150,11 @@ module.exports = {
           throw err;
         }
         if(result.affectedRows > 0){
+          connection.release();
           callback(true);
         }
         else{
+          connection.release();
           callback(false);
         }
       });
