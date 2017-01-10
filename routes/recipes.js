@@ -151,12 +151,47 @@ module.exports = function(app, router, database) {
     }
   });
 
-  router.post("/recipes/:id/likes/:type", function(req, res) {
+  router.delete("/recipes/:id/likes", function(req, res) {
+    database.likes.getLikeByUser(req.decoded.userId, req.params.id, function(success, type) {
+      if(success) {
+        //Remove like
+        database.likes.removeLike(req.decoded.userId, req.params.id, function(success) {
+          if(success === true) {
+            res.status(200).json({
+              success: true,
+              message: "Recipe unliked"
+            });
+          }
+          else {
+            res.status(500).json({
+              success: false,
+              message: "Could not remove like from recipe"
+            });
+          }
+        });
+      }
+      else {
+        res.status(200).json({
+          success: true,
+          message: "You did not like the recipe from the beginning (still success true since you don't like the recipe)"
+        });
+      }
+    });
+  });
+
+  router.post("/recipes/:id/likes", function(req, res) {
+    if(!req.body.type) {
+      return res.status(400).json({
+        success: false,
+        message: "Missing mandatory like type parameter"
+      });
+    }
+
     var typeId = 0;
-    if(req.params.type.toLowerCase() === "yum") {
+    if(req.body.type.toLowerCase() === "yum") {
       typeId = 1;
     }
-    else if(req.params.type.toLowerCase() === "yuck") {
+    else if(req.body.type.toLowerCase() === "yuck") {
       typeId = 0;
     }
     else {
@@ -168,9 +203,18 @@ module.exports = function(app, router, database) {
 
     database.likes.getLikeByUser(req.decoded.userId, req.params.id, function(success, type) {
       if(success) {
-        res.status(400).json({
-          success: false,
-          message: "You already like this recipe. You may only like it once, either yum or yuck not both."
+        database.likes.updateLike(req.decoded.userId, req.params.id, typeId, function(success) {
+          if(success) {
+            res.status(200).json({
+              success: true
+            });
+          }
+          else {
+            res.status(500).json({
+              success: false,
+              message: "Could change like"
+            });
+          }
         });
       }
       else {

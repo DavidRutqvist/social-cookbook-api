@@ -65,7 +65,7 @@ module.exports = {
         if(err) {
           throw err;
         }
-        connection.query("UPDATE Likes SET Type = ? WHERE UserId = ? AND RecipeId =?", [type, userId, recipeId], function(err, result){
+        connection.query("UPDATE Likes SET Type = ? WHERE UserId = ? AND RecipeId =?", [like, userId, recipeId], function(err, result){
           if(err) {
             throw err;
           }
@@ -89,7 +89,7 @@ module.exports = {
         callback(result.affectedRows);
       });
     },
-    removeLikes: function(userId, recipeId, callback){
+    removeLike: function(userId, recipeId, callback){
       connectionPool.getConnection(function(err, connection){
         if(err) {
           throw err;
@@ -98,7 +98,7 @@ module.exports = {
           if(err) {
             throw err;
           }
-          if(affectedRows > 0) {
+          if(result.affectedRows > 0) {
             connection.release();
             callback(true);
           }
