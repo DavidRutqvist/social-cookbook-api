@@ -25,6 +25,15 @@ module.exports = {
       });
     });
   },
+  removeFavoritesFromRecipe: function(connection, recipeId, callback) {
+    connection.query("DELETE FROM Favorites WHERE  RecipeId = ?", [recipeId], function(err, result){
+      if(err){
+        throw err;
+      }
+
+      callback(true);
+    });
+  },
   checkIfFavorite: function(userId, recipeId, callback) {
     connectionPool.getConnection(function(err, connection) {
       if(err) {

@@ -2,12 +2,16 @@ var connectionPool;
 var ingredientsHelper = require("./ingredients");
 var likesHelper = require("./likes");
 var commentsHelper = require("./comments");
+var favoritesHelper = require("./favorites");
 var tagsHelper = require("./tags")
 module.exports = {
   init: function(dbPool) {
     connectionPool = dbPool;
     ingredientsHelper.init(connectionPool);
     likesHelper.init(connectionPool);
+    favoritesHelper.init(connectionPool);
+    tagsHelper.init(connectionPool);
+    commentsHelper.init(connectionPool);
   },
   insert: function(userId, title, content, numberOfPortions, ingredients, image, callback) {
     connectionPool.getConnection(function(err, connection) {
@@ -263,19 +267,21 @@ module.exports = {
         ingredientsHelper.deleteIngredientsFromRecipe(connection, recipeId, function(affectedRows) {
           commentsHelper.removeCommentsFromRecipe(connection, recipeId, function(success){
             tagsHelper.removeTagsFromRecipe(connection, recipeId, function(success){
-              connection.query("DELETE FROM Recipes WHERE Recipes.Id = ?", [recipeId], function(err, result) {
-                if(err) {
-                  throw err;
-                }
+              favoritesHelper.removeFavoritesFromRecipe(connection, recipeId, function(success) {
+                connection.query("DELETE FROM Recipes WHERE Recipes.Id = ?", [recipeId], function(err, result) {
+                  if(err) {
+                    throw err;
+                  }
 
-                if(result.affectedRows > 0) {
-                  connection.release();
-                  callback(true);
-                }
-                else {
-                  connection.release();
-                  callback(false);
-                }
+                  if(result.affectedRows > 0) {
+                    connection.release();
+                    callback(true);
+                  }
+                  else {
+                    connection.release();
+                    callback(false);
+                  }
+                });
               });
             });
           });
