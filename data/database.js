@@ -110,6 +110,7 @@ module.exports = {
         }
 
         nextIsAdmin(users, 0, function(success, users){
+          connection.release();
           callback(success, users);
         });
       });
