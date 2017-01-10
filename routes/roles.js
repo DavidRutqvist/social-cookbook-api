@@ -5,12 +5,14 @@ module.exports = function(app, router, database) {
         database.getRoles(function(roles){
           res.status(200).json({
             roles: roles,
+            success: true,
             message: "Roles retrieved successfully"
           });
         });
       }
       else{
         res.status(401).json({
+          success: false,
           message: "Not authorized"
         });
       }
