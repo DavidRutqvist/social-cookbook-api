@@ -1,6 +1,6 @@
 {
   "name": "social-cookbook-api",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
     "start": "node ./bin/www"
@@ -18,5 +18,11 @@
     "node-uuid": "^1.4.7",
     "nutritionix": "^0.6.1",
     "querystring": "^0.2.0"
+  },
+  "apidoc": {
+    "title": "The Social Cookbook API Documentation",
+    "header": {
+      "title": "The Social Cookbook API"
+    }
   }
 }

@@ -1,6 +1,29 @@
 var multer = require('multer');
 var upload = multer();
 module.exports = function(app, router, database) {
+
+  /**
+  * @api {get} /api/recipes List Recipes
+  * @apiDescription Gets a list of recipes for the given page
+  * @apiName Get list of recipes, paginated
+  * @apiGroup Recipes
+  * @apiHeader {String} x-access-token Token obtained using authentication process
+  * @apiParam {Number} [page=1] Page
+  * @apiParam {String} [order=DESC] Order of recipes by date added (ASC or DESC)
+  *
+  * @apiSuccess {Number} page Current page number
+  * @apiSuccess {Number} pageSize Page size used when paging results
+  * @apiSuccess {Number} totalCount Total number of recipes stored
+  * @apiSuccess {Object[]} recipes List of recipes
+  * @apiSuccess {Number} recipes.id Id of recipe
+  * @apiSuccess {String} recipes.title Title of recipe
+  * @apiSuccess {Date} recipes.creationTime Timestamp when the recipe was originally created
+  * @apiSuccess {String} recipes.image Path to recipe's image
+  * @apiSuccess {Object} recipes.byUser User information of creator
+  * @apiSuccess {Number} recipes.byUser.id User id of creator
+  * @apiSuccess {String} recipes.byUser.firstName First name of creator
+  * @apiSuccess {String} recipes.byUser.lastName Last name of creator
+  */
   router.get("/recipes", function(req, res) {
     //Get all recipes with pagination
     var page = 1;
@@ -31,6 +54,28 @@ module.exports = function(app, router, database) {
     });
   });
 
+  /**
+  * @api {post} /api/recipes Add Recipe
+  * @apiDescription Add a new recipe to the cookbook
+  * @apiName Add a new recipe
+  * @apiGroup Recipes
+  * @apiHeader {String} x-access-token Token obtained using authentication process
+  *
+  * @apiParam {String} title Title of new recipe
+  * @apiParam {String} content HTML content of recipe, will be sanitized by API. Allows simple tags like bold, underline et cetera.
+  * @apiParam {Number} numberOfPortions Number of portions the recipe is following
+  * @apiParam {Object[]} ingredients List of ingredients
+  * @apiParam {String} ingredients.name Name of ingredients
+  * @apiParam {Number} ingredients.amount Amount of ingredient, may be a decimal
+  * @apiParam {String} ingredients.unit Unit which the amount is measured in
+  *
+  * @apiSuccess {Boolean} success Indicates whether the request was successful
+  * @apiSuccess {Number} recipeId Id of newly created recipe
+  * @apiSuccess {String} message Status message
+  *
+  * @apiError {Boolean} success Indicates whether the request was successful
+  * @apiError {String} message Status message
+  */
   router.post("/recipes", function(req, res) {
     //Add a new recipe
     var missingFields = "";
@@ -112,6 +157,41 @@ module.exports = function(app, router, database) {
     });
   });
 
+  /**
+  * @api {get} /api/recipes/:id Get Recipe
+  * @apiDescription Gets a specific recipe containing all information about the recipe
+  * @apiName Get a specific recipe
+  * @apiGroup Recipes
+  * @apiHeader {String} x-access-token Token obtained using authentication process
+  * @apiParam {Number} id Id of the recipe to get
+  *
+  * @apiSuccess {Number} id Id of recipe
+  * @apiSuccess {String} title Title of recipe
+  * @apiSuccess {Date} creationTime Timestamp when the recipe was originally created
+  * @apiSuccess {String} image Path to recipe's image
+  * @apiSuccess {Number} numberOfPortions The number of portions the recipe is for
+  * @apiSuccess {String} content HTML content of the recipe, i.e. the actual descriptions
+  * @apiSuccess {Object} byUser User information of creator
+  * @apiSuccess {Number} byUser.id User id of creator
+  * @apiSuccess {String} byUser.firstName First name of creator
+  * @apiSuccess {String} byUser.lastName Last name of creator
+  * @apiSuccess {Object[]} ingredients Ingredients used in the recipe
+  * @apiSuccess {Number} ingredients.id Id of ingredient
+  * @apiSuccess {String} ingredients.name Name of ingredients
+  * @apiSuccess {Number} ingredients.amount Amount used for the specific ingredients
+  * @apiSuccess {String} ingredients.unit Unit which the ingredient is measured in
+  * @apiSuccess {String[]} tags Tags
+  * @apiSuccess {Object[]} comments Comments on the recipeId
+  * @apiSuccess {Number} comments.id Id of comments
+  * @apiSuccess {String} comments.content Content of comment
+  * @apiSuccess {Date} comments.creationTime Timestamp of comment
+  * @apiSuccess {String} comments.firstName First name of user who commented
+  * @apiSuccess {String} comments.lastName Last name of user who commented
+  * @apiSuccess {Number} comments.userId User id of user who commented
+  * @apiSuccess {Object} likes Object containing count of likes
+  * @apiSuccess {Number} likes.yum Number of "yums"
+  * @apiSuccess {Number} likes.yuck Number of "yucks"
+  */
   router.get("/recipes/:id", function(req, res) {
     //Get a specific recipe with id req.params.id
     database.recipes.get(req.params.id, function(success, recipe) {
@@ -127,6 +207,21 @@ module.exports = function(app, router, database) {
     });
   });
 
+  /**
+  * @api {post} /api/recipes/:id/comments Add Comment
+  * @apiDescription Add a new comment to a specific recipe
+  * @apiName Add a comment
+  * @apiGroup Recipes
+  * @apiHeader {String} x-access-token Token obtained using authentication process
+  *
+  * @apiParam {Number} id Id of the recipe to comment
+  * @apiParam {String} content Content of comment, no HTML allowed but if HTML is supplied will it be removed by the API
+  *
+  * @apiSuccess {Boolean} success Indicates whether the request was successful
+  *
+  * @apiError {Boolean} success Indicates whether the request was successful
+  * @apiError {String} message Status message
+  */
   router.post("/recipes/:id/comments", function(req, res) {
     if((req.body.comment === undefined) || (req.body.comment === null) || (req.body.comment === "")) {
       res.status(400).json({
@@ -151,6 +246,21 @@ module.exports = function(app, router, database) {
     }
   });
 
+  /**
+  * @api {delete} /api/recipes/:id/likes Remove like
+  * @apiDescription Removes a like from the recipe which was added by the current user. Since a user can only like a recipe ones is no id or type required.
+  * @apiName Remove a like
+  * @apiGroup Recipes
+  * @apiHeader {String} x-access-token Token obtained using authentication process
+  *
+  * @apiParam {Number} id Id of the recipe to unlike
+  *
+  * @apiSuccess {Boolean} success Indicates whether the request was successful
+  * @apiError {String} message Status message
+  *
+  * @apiError {Boolean} success Indicates whether the request was successful
+  * @apiError {String} message Status message
+  */
   router.delete("/recipes/:id/likes", function(req, res) {
     database.likes.getLikeByUser(req.decoded.userId, req.params.id, function(success, type) {
       if(success) {
@@ -179,6 +289,21 @@ module.exports = function(app, router, database) {
     });
   });
 
+  /**
+  * @api {post} /api/recipes/:id/likes Add like
+  * @apiDescription Adds a like to the current recipe. If the current user has already liked the recipe then the like type, i.e. yum or yuck, will be updated accordingly.
+  * @apiName Add a like
+  * @apiGroup Recipes
+  * @apiHeader {String} x-access-token Token obtained using authentication process
+  *
+  * @apiParam {Number} id Id of the recipe to like
+  * @apiParam {String} type Type of like, must be yum or yuck
+  *
+  * @apiSuccess {Boolean} success Indicates whether the request was successful
+  *
+  * @apiError {Boolean} success Indicates whether the request was successful
+  * @apiError {String} message Status message
+  */
   router.post("/recipes/:id/likes", function(req, res) {
     if(!req.body.type) {
       return res.status(400).json({
@@ -235,6 +360,21 @@ module.exports = function(app, router, database) {
     });
   });
 
+  /**
+  * @api {get} /api/recipes/:id/likes Get likes
+  * @apiDescription Gets likes for the recipe
+  * @apiName Get likes for recipe
+  * @apiGroup Recipes
+  * @apiHeader {String} x-access-token Token obtained using authentication process
+  *
+  * @apiParam {Number} id Id of the recipe to get likes for
+  *
+  * @apiSuccess {Number} yum Number of "yums"
+  * @apiSuccess {Number} yuck Number of "yucks"
+  *
+  * @apiError {Boolean} success Indicates whether the request was successful
+  * @apiError {String} message Status message
+  */
   router.get("/recipes/:id/likes", function(req, res) {
     database.likes.getLikes(req.params.id, function(success, likes) {
       if(success) {
@@ -249,6 +389,18 @@ module.exports = function(app, router, database) {
     });
   });
 
+  /**
+  * @api {get} /api/recipes/:id/likes/me Get current user's like
+  * @apiDescription Checks whether current user has likes the recipe and returns the type of like
+  * @apiName Get current user's like
+  * @apiGroup Recipes
+  * @apiHeader {String} x-access-token Token obtained using authentication process
+  *
+  * @apiParam {Number} id Id of the recipe to get like for
+  *
+  * @apiSuccess {Boolean} likes Indicates whether the current user likes the recipe or not
+  * @apiSuccess {String} type If the user likes the current recipe is the type of like returned, i.e. yum och yuck
+  */
   router.get("/recipes/:id/likes/me", function(req, res) {
     database.likes.getLikeByUser(req.decoded.userId, req.params.id, function(success, type) {
       if(success) {
@@ -279,6 +431,21 @@ module.exports = function(app, router, database) {
     });
   });
 
+  /**
+  * @api {put} /api/recipes/:id/image Set image
+  * @apiDescription Sets the image for the recipe. If an image is provided is it uploaded to the API servers, otherwise is the current image set to no image.
+  * @apiName Set image of recipe
+  * @apiGroup Recipes
+  * @apiHeader {String} x-access-token Token obtained using authentication process
+  *
+  * @apiParam {Number} id Id of the recipe to set image for
+  * @apiParam {File} [image] Image supplied as multipart/form-data. If leaved then current image is removed.
+  *
+  * @apiSuccess {Boolean} success Indicates whether the request was successful
+  *
+  * @apiError {Boolean} success Indicates whether the request was successful
+  * @apiError {String} message Status message
+  */
   router.put("/recipes/:id/image", upload.single('image'), function(req, res) {
     if(req.file !== undefined) {
       database.images.upload(req.decoded.userId, req.file, function(image) {
@@ -325,6 +492,21 @@ module.exports = function(app, router, database) {
     }
   });
 
+  /**
+  * @api {delete} /api/recipes/:id Delete Recipe
+  * @apiDescription Deletes the recipe and all associated data, i.e. comments, likes, favorites et cetera. The current user must either be creator or administrator in order to be able to delete a recipe.
+  * @apiName Delete a Recipe
+  * @apiGroup Recipes
+  * @apiHeader {String} x-access-token Token obtained using authentication process
+  *
+  * @apiParam {Number} id Id of the recipe to delete
+  *
+  * @apiSuccess {Boolean} success Indicates whether the request was successful
+  * @apiSuccess {String} message Status message
+  *
+  * @apiError {Boolean} success Indicates whether the request was successful
+  * @apiError {String} message Status message
+  */
   router.delete("/recipes/:id", function(req, res) {
     //Delete recipe with id req.params.id
     database.recipes.getCreator(req.params.id, function(success, creatorId) {
