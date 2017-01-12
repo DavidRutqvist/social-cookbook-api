@@ -248,7 +248,7 @@ module.exports = function(app, router, database) {
 
   /**
   * @api {delete} /api/recipes/:id/likes Remove like
-  * @apiDescription Removes a like from the recipe which was added by the current user. Since a user can only like a recipe ones is no id or type required.
+  * @apiDescription Removes a like from the recipe which was added by the current user. Since a user can only like a recipe once is no id or type required.
   * @apiName Remove a like
   * @apiGroup Recipes
   * @apiHeader {String} x-access-token Token obtained using authentication process
