@@ -22,7 +22,8 @@
   "apidoc": {
     "title": "The Social Cookbook API Documentation",
     "header": {
-      "title": "The Social Cookbook API"
+      "title": "The Social Cookbook API",
+      "filename": "apidoc-header.md"
     }
   }
 }
