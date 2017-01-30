@@ -446,99 +446,29 @@ module.exports = function(app, router, database) {
   * @apiError {String} message Status message
   */
   router.put("/recipes/:id", function(req, res) {
-    //Update recipe
-    var recipeId = req.params.id;
-    var missingFields = "";
-    if(req.body.title === undefined) {
-      missingFields += "title, ";
-    }
-
-    if(req.body.content === undefined) {
-      missingFields += "content, ";
-    }
-
-    if((req.body.ingredients === undefined) || (req.body.ingredients.length == 0)) {
-      missingFields += "ingredients, ";
-    }
-
-    if(req.body.numberOfPortions === undefined) {
-      missingFields += "numberOfPortions, ";
-    }
-
-    if(missingFields !== "") {
-      missingFields = missingFields.substring(0, missingFields.length - 2);
-      return res.status(400).json({
-        success: false,
-        message: "Missing mandatory fields " + missingFields
-      });
-    }
-
-    for(var i = 0; i < req.body.ingredients.length; i++) {
-      var ingredient = req.body.ingredients[i];
-      if((ingredient.name === undefined) || (ingredient.amount === undefined) || (ingredient.unit === undefined)) {
-        return res.status(400).json({
-          success: false,
-          message: "Invalid ingredient(s) supplied"
-        });
-      }
-    }
-
-    var tags = [];
-    if(req.body.tags !== undefined){
-      tags = req.body.tags;
-    }
-
-    database.recipes.update(recipeId, req.body.title, req.body.content, req.body.numberOfPortions, function(success) {
+    database.recipes.getCreator(req.params.id, function(success, creatorId) {
       if(success) {
-        database.tags.removeTagsFromRecipe(recipeId, function(success) {
-          if(success) {
-            database.tags.addTags(recipeId, tags, function(success, numberOfAddedTags){
-              if(success){
-                database.recipes.removeAllIngredients(recipeId, function(success) {
-                  if(success) {
-                    database.recipes.addIngredients(recipeId, req.body.ingredients, function(succcess, numberOfAddedIngredients) {
-                      if(success) {
-                        res.status(200).json({
-                          success: true,
-                          message: "Recipe updated successfully"
-                        });
-                      }
-                      else {
-                        res.status(200).json({
-                          success: true,
-                          message: "Recipe was updated but only " + numberOfAddedIngredients + " ingredients could be added the rest failed"
-                        });
-                      }
-                    });
-                  }
-                  else {
-                    res.status(200).json({
-                      success: true,
-                      message: "Recipe was updated but could not add ingredients, thus all ingredients were removed"
-                    });
-                  }
-                });
-              }
-              else {
-                res.status(200).json({
-                  success: true,
-                  message: "Recipe was updated but only " + numberOfAddedTags + " tags could be added the rest failed"
-                });
-              }
-            });
-          }
-          else {
-            res.status(200).json({
-              success: true,
-              message: "Recipe was updated but could not update tags. Tags and ingredients were therefore not updated"
-            });
-          }
-        });
+        if(creatorId.toString() === req.decoded.userId.toString()) {
+          updateRecipe(database, req, res);
+        }
+        else {
+          database.isAdmin(req.decoded.userId, function(isAdmin) {
+            if(isAdmin) {
+              updateRecipe(database, req, res);
+            }
+            else {
+              res.status(403).json({
+                success: false,
+                message: "You are not either administrator or the creator of the recipe, hence you are not allowed to update it"
+              });
+            }
+          });
+        }
       }
       else {
-        res.status(500).json({
+        res.status(404).json({
           success: false,
-          message: "Something went wrong"
+          message: "Recipe not found"
         });
       }
     });
@@ -662,6 +592,105 @@ function deleteRecipe(res, recipes, recipeId) {
       res.status(500).json({
         success: false,
         message: "Could not delete recipe"
+      });
+    }
+  });
+}
+
+function updateRecipe(database, req, res) {
+  //Update recipe
+  var recipeId = req.params.id;
+  var missingFields = "";
+  if(req.body.title === undefined) {
+    missingFields += "title, ";
+  }
+
+  if(req.body.content === undefined) {
+    missingFields += "content, ";
+  }
+
+  if((req.body.ingredients === undefined) || (req.body.ingredients.length == 0)) {
+    missingFields += "ingredients, ";
+  }
+
+  if(req.body.numberOfPortions === undefined) {
+    missingFields += "numberOfPortions, ";
+  }
+
+  if(missingFields !== "") {
+    missingFields = missingFields.substring(0, missingFields.length - 2);
+    return res.status(400).json({
+      success: false,
+      message: "Missing mandatory fields " + missingFields
+    });
+  }
+
+  for(var i = 0; i < req.body.ingredients.length; i++) {
+    var ingredient = req.body.ingredients[i];
+    if((ingredient.name === undefined) || (ingredient.amount === undefined) || (ingredient.unit === undefined)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid ingredient(s) supplied"
+      });
+    }
+  }
+
+  var tags = [];
+  if(req.body.tags !== undefined){
+    tags = req.body.tags;
+  }
+
+  database.recipes.update(recipeId, req.body.title, req.body.content, req.body.numberOfPortions, function(success) {
+    if(success) {
+      database.tags.removeTagsFromRecipe(recipeId, function(success) {
+        if(success) {
+          database.tags.addTags(recipeId, tags, function(success, numberOfAddedTags){
+            if(success){
+              database.recipes.removeAllIngredients(recipeId, function(success) {
+                if(success) {
+                  database.recipes.addIngredients(recipeId, req.body.ingredients, function(succcess, numberOfAddedIngredients) {
+                    if(success) {
+                      res.status(200).json({
+                        success: true,
+                        message: "Recipe updated successfully"
+                      });
+                    }
+                    else {
+                      res.status(200).json({
+                        success: true,
+                        message: "Recipe was updated but only " + numberOfAddedIngredients + " ingredients could be added the rest failed"
+                      });
+                    }
+                  });
+                }
+                else {
+                  res.status(200).json({
+                    success: true,
+                    message: "Recipe was updated but could not add ingredients, thus all ingredients were removed"
+                  });
+                }
+              });
+            }
+            else {
+              res.status(200).json({
+                success: true,
+                message: "Recipe was updated but only " + numberOfAddedTags + " tags could be added the rest failed"
+              });
+            }
+          });
+        }
+        else {
+          res.status(200).json({
+            success: true,
+            message: "Recipe was updated but could not update tags. Tags and ingredients were therefore not updated"
+          });
+        }
+      });
+    }
+    else {
+      res.status(500).json({
+        success: false,
+        message: "Something went wrong"
       });
     }
   });
