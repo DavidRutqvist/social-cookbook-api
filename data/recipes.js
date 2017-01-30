@@ -35,6 +35,28 @@ module.exports = {
       });
     });
   },
+  update: function(recipeId, title, content, numberOfPortions, callback) {
+    connectionPool.getConnection(function(err, connection) {
+      if(err) {
+        throw err;
+      }
+
+      connection.query("UPDATE Recipes SET Title = ?, Content = ?, NumberOfPortions = ? WHERE Id = ?", [title, content, numberOfPortions, recipeId], function(err, result) {
+        if(err) {
+          throw err;
+        }
+
+        if(result.affectedRows > 0) {
+          connection.release();
+          callback(true);
+        }
+        else {
+          connection.release();
+          callback(false);
+        }
+      });
+    });
+  },
   addIngredients: function(recipeId, ingredients, callback) {
     connectionPool.getConnection(function(err, connection) {
       if(err) {
@@ -57,6 +79,26 @@ module.exports = {
         connection.release();
         callback(success);
       });
+    });
+  },
+  removeAllIngredients: function(recipeId, callback) {
+    connectionPool.getConnection(function(err, connection) {
+      if(err) {
+        throw err;
+      }
+
+      connection.query("DELETE FROM IngredientsInRecipes WHERE RecipeId = ?", [recipeId], function(err, result) {
+        if(err) {
+          throw err;
+        }
+
+        if(result.affectedRows > 0) {
+          callback(true);
+        }
+        else {
+          callback(false);
+        }
+      })
     });
   },
   count: function(callback) {
@@ -266,7 +308,7 @@ module.exports = {
         //We don't care about affectedRows since there may be zero likes
         ingredientsHelper.deleteIngredientsFromRecipe(connection, recipeId, function(affectedRows) {
           commentsHelper.removeCommentsFromRecipe(connection, recipeId, function(success){
-            tagsHelper.removeTagsFromRecipe(connection, recipeId, function(success){
+            tagsHelper.removeTagsFromRecipeUsingConnection(connection, recipeId, function(success){
               favoritesHelper.removeFavoritesFromRecipe(connection, recipeId, function(success) {
                 connection.query("DELETE FROM Recipes WHERE Recipes.Id = ?", [recipeId], function(err, result) {
                   if(err) {

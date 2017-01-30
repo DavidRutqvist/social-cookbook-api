@@ -424,10 +424,123 @@ module.exports = function(app, router, database) {
     })
   });
 
+  /**
+  * @api {put} /api/recipes/:id Update Recipe
+  * @apiDescription Updates the specified recipe. The current user must either be creator of the recipe or an administrator.
+  * @apiName Update a Recipe
+  * @apiGroup Recipes
+  * @apiHeader {String} x-access-token Token obtained using authentication process
+  *
+  * @apiParam {String} title Title of recipe
+  * @apiParam {String} content HTML content of recipe, will be sanitized by API. Allows simple tags like bold, underline et cetera.
+  * @apiParam {Number} numberOfPortions Number of portions the recipe is following
+  * @apiParam {Object[]} ingredients List of ingredients
+  * @apiParam {String} ingredients.name Name of ingredients
+  * @apiParam {Number} ingredients.amount Amount of ingredient, may be a decimal
+  * @apiParam {String} ingredients.unit Unit which the amount is measured in
+  *
+  * @apiSuccess {Boolean} success Indicates whether the request was successful
+  * @apiSuccess {String} message Status message
+  *
+  * @apiError {Boolean} success Indicates whether the request was successful
+  * @apiError {String} message Status message
+  */
   router.put("/recipes/:id", function(req, res) {
-    //Update the parameters supplied in the request body in recipe with id req.params.id
-    res.json({
-      message: "Not yet implemented"
+    //Update recipe
+    var recipeId = req.params.id;
+    var missingFields = "";
+    if(req.body.title === undefined) {
+      missingFields += "title, ";
+    }
+
+    if(req.body.content === undefined) {
+      missingFields += "content, ";
+    }
+
+    if((req.body.ingredients === undefined) || (req.body.ingredients.length == 0)) {
+      missingFields += "ingredients, ";
+    }
+
+    if(req.body.numberOfPortions === undefined) {
+      missingFields += "numberOfPortions, ";
+    }
+
+    if(missingFields !== "") {
+      missingFields = missingFields.substring(0, missingFields.length - 2);
+      return res.status(400).json({
+        success: false,
+        message: "Missing mandatory fields " + missingFields
+      });
+    }
+
+    for(var i = 0; i < req.body.ingredients.length; i++) {
+      var ingredient = req.body.ingredients[i];
+      if((ingredient.name === undefined) || (ingredient.amount === undefined) || (ingredient.unit === undefined)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid ingredient(s) supplied"
+        });
+      }
+    }
+
+    var tags = [];
+    if(req.body.tags !== undefined){
+      tags = req.body.tags;
+    }
+
+    database.recipes.update(recipeId, req.body.title, req.body.content, req.body.numberOfPortions, function(success) {
+      if(success) {
+        database.tags.removeTagsFromRecipe(recipeId, function(success) {
+          if(success) {
+            database.tags.addTags(recipeId, tags, function(success, numberOfAddedTags){
+              if(success){
+                database.recipes.removeAllIngredients(recipeId, function(success) {
+                  if(success) {
+                    database.recipes.addIngredients(recipeId, req.body.ingredients, function(succcess, numberOfAddedIngredients) {
+                      if(success) {
+                        res.status(200).json({
+                          success: true,
+                          message: "Recipe updated successfully"
+                        });
+                      }
+                      else {
+                        res.status(200).json({
+                          success: true,
+                          message: "Recipe was updated but only " + numberOfAddedIngredients + " ingredients could be added the rest failed"
+                        });
+                      }
+                    });
+                  }
+                  else {
+                    res.status(200).json({
+                      success: true,
+                      message: "Recipe was updated but could not add ingredients, thus all ingredients were removed"
+                    });
+                  }
+                });
+              }
+              else {
+                res.status(200).json({
+                  success: true,
+                  message: "Recipe was updated but only " + numberOfAddedTags + " tags could be added the rest failed"
+                });
+              }
+            });
+          }
+          else {
+            res.status(200).json({
+              success: true,
+              message: "Recipe was updated but could not update tags. Tags and ingredients were therefore not updated"
+            });
+          }
+        });
+      }
+      else {
+        res.status(500).json({
+          success: false,
+          message: "Something went wrong"
+        });
+      }
     });
   });
 
